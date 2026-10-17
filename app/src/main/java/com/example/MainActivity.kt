@@ -5,26 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ui.AppMode
+import com.example.ui.ActiveScreen
 import com.example.ui.CalculatorViewModel
-import com.example.ui.components.AppDrawer
+import com.example.ui.components.HamburgerSideSheet
 import com.example.ui.components.HistoryDialog
 import com.example.ui.components.MainTopBar
 import com.example.ui.components.ScopeDialog
@@ -36,87 +25,76 @@ import com.example.ui.theme.LightBackground
 import com.example.ui.theme.Puny4Theme
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: CalculatorViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            val viewModel: CalculatorViewModel = viewModel()
-            val themeMode by viewModel.appThemeMode.collectAsState()
+            val themeMode by viewModel.themeMode.collectAsState()
+            val currentScreen by viewModel.currentScreen.collectAsState()
+            val isDrawerOpen by viewModel.isDrawerOpen.collectAsState()
+            val isHistoryOpen by viewModel.isHistoryOpen.collectAsState()
+            val isScopeOpen by viewModel.isScopeOpen.collectAsState()
+
+            // Handle back presses smoothly
+            BackHandler(enabled = isDrawerOpen) {
+                viewModel.setDrawerOpen(false)
+            }
+            BackHandler(enabled = !isDrawerOpen && currentScreen == ActiveScreen.STUDIO) {
+                viewModel.setScreen(ActiveScreen.NORMAL)
+            }
 
             Puny4Theme(themeMode = themeMode) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Puny4App(viewModel = viewModel)
+                val isDark = themeMode == AppThemeMode.AMOLED_DARK
+                val mainBg = if (isDark) AmoledBackground else LightBackground
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(mainBg)
+                ) {
+                    Scaffold(
+                        topBar = {
+                            MainTopBar(viewModel = viewModel)
+                        },
+                        containerColor = mainBg,
+                        contentWindowInsets = WindowInsets.safeDrawing
+                    ) { innerPadding ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                        ) {
+                            when (currentScreen) {
+                                ActiveScreen.NORMAL -> NormalCalculatorScreen(viewModel = viewModel)
+                                ActiveScreen.STUDIO -> MathStudioScreen(viewModel = viewModel)
+                            }
+                        }
+                    }
+
+                    // Hamburger Side Sheet (opens halfway across screen from top to bottom)
+                    HamburgerSideSheet(viewModel = viewModel)
+
+                    // History Dialog
+                    if (isHistoryOpen) {
+                        HistoryDialog(
+                            viewModel = viewModel,
+                            onDismiss = { viewModel.setHistoryOpen(false) }
+                        )
+                    }
+
+                    // Scope Dialog
+                    if (isScopeOpen) {
+                        ScopeDialog(
+                            viewModel = viewModel,
+                            onDismiss = { viewModel.setScopeOpen(false) }
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Puny4App(
-    viewModel: CalculatorViewModel
-) {
-    val currentMode by viewModel.currentMode.collectAsState()
-    val showHistory by viewModel.showHistoryDialog.collectAsState()
-    val showScope by viewModel.showScopeDialog.collectAsState()
-    val isDrawerOpen by viewModel.isDrawerOpen.collectAsState()
-    val themeMode by viewModel.appThemeMode.collectAsState()
-    val isDark = themeMode == AppThemeMode.AMOLED_DARK
-
-    val appBg = if (isDark) AmoledBackground else LightBackground
-
-    // Back handler: close drawer first, or switch from Math Studio to Normal before exiting
-    BackHandler(enabled = isDrawerOpen || currentMode == AppMode.MATH_STUDIO) {
-        if (isDrawerOpen) {
-            viewModel.isDrawerOpen.value = false
-        } else if (currentMode == AppMode.MATH_STUDIO) {
-            viewModel.setAppMode(AppMode.NORMAL)
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(appBg),
-            topBar = {
-                MainTopBar(viewModel = viewModel)
-            },
-            containerColor = appBg
-        ) { innerPadding ->
-            AnimatedContent(
-                targetState = currentMode,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "mode_transition",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) { mode ->
-                when (mode) {
-                    AppMode.NORMAL -> NormalCalculatorScreen(viewModel = viewModel)
-                    AppMode.MATH_STUDIO -> MathStudioScreen(viewModel = viewModel)
-                }
-            }
-
-            if (showHistory) {
-                HistoryDialog(
-                    viewModel = viewModel,
-                    onDismiss = { viewModel.showHistoryDialog.value = false }
-                )
-            }
-
-            if (showScope) {
-                ScopeDialog(
-                    onDismiss = { viewModel.showScopeDialog.value = false }
-                )
-            }
-        }
-
-        // Half-Screen Slide Drawer
-        AppDrawer(
-            viewModel = viewModel,
-            isOpen = isDrawerOpen,
-            onClose = { viewModel.isDrawerOpen.value = false }
-        )
     }
 }

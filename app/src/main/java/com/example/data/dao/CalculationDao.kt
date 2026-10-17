@@ -18,22 +18,19 @@ interface CalculationDao {
     fun getHistoryByMode(mode: String): Flow<List<CalculationRecord>>
 
     @Query("SELECT * FROM calculations WHERE isFavorite = 1 ORDER BY timestamp DESC")
-    fun getFavoriteFormulas(): Flow<List<CalculationRecord>>
+    fun getFavorites(): Flow<List<CalculationRecord>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCalculation(record: CalculationRecord): Long
+    suspend fun insert(record: CalculationRecord): Long
 
     @Update
-    suspend fun updateCalculation(record: CalculationRecord)
+    suspend fun update(record: CalculationRecord)
 
     @Delete
-    suspend fun deleteCalculation(record: CalculationRecord)
-
-    @Query("UPDATE calculations SET isFavorite = :isFavorite WHERE id = :id")
-    suspend fun setFavorite(id: Long, isFavorite: Boolean)
+    suspend fun delete(record: CalculationRecord)
 
     @Query("DELETE FROM calculations WHERE isFavorite = 0")
-    suspend fun clearNonFavoriteHistory()
+    suspend fun clearNonFavorites()
 
     @Query("DELETE FROM calculations")
     suspend fun clearAll()

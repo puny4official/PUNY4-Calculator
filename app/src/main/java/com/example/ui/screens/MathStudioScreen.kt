@@ -1,140 +1,114 @@
 package com.example.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.math.model.MathNode
 import com.example.math.model.SolutionStep
 import com.example.ui.CalculatorViewModel
-import com.example.ui.MathStudioCategory
-import com.example.ui.components.ScrollableMathFormula
-import com.example.ui.theme.BlackBackground
-import com.example.ui.theme.BlackBorder
-import com.example.ui.theme.BlackSurface
-import com.example.ui.theme.BlackSurfaceElevated
-import com.example.ui.theme.BlackSurfaceVariant
-import com.example.ui.theme.MathAmber
-import com.example.ui.theme.MathCyan
-import com.example.ui.theme.MathGreen
-import com.example.ui.theme.MathPink
-import com.example.ui.theme.PurpleAccent
-import com.example.ui.theme.PurplePrimary
-import com.example.ui.theme.PurpleSecondary
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import com.example.ui.components.MathFormulaView
+import com.example.ui.theme.*
 
 @Composable
 fun MathStudioScreen(
     viewModel: CalculatorViewModel,
     modifier: Modifier = Modifier
 ) {
-    val activeCategory by viewModel.activeCategory.collectAsState()
+    val activeCategory by viewModel.studioCategory.collectAsState()
     val solution by viewModel.studioSolution.collectAsState()
-    val error by viewModel.studioError.collectAsState()
-    val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
+    val studioError by viewModel.studioError.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsState()
+
+    val isDark = themeMode == AppThemeMode.AMOLED_DARK
+
+    val cardBg = if (isDark) AmoledDisplaySurface else LightDisplaySurface
+    val cardBorder = if (isDark) BlackBorder else LightBorder
+    val primaryText = if (isDark) TextPrimary else LightTextPrimary
+    val secondaryText = if (isDark) TextSecondary else LightTextSecondary
+
+    val categories = listOf(
+        "کسر و توان",
+        "معادلات و دستگاه",
+        "مشتق",
+        "انتگرال",
+        "حد و رفع ابهام",
+        "سیگما و سری",
+        "ماتریس ۲×۲"
+    )
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(BlackBackground)
-            .padding(horizontal = 14.dp)
-            .testTag("math_studio_list"),
+            .padding(horizontal = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // --- HORIZONTAL CATEGORY CHIPS ---
         item {
-            Spacer(modifier = Modifier.height(4.dp))
-            // CATEGORY CHIPS
-            val scrollState = rememberScrollState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(scrollState),
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                MathStudioCategory.values().forEach { cat ->
+                categories.forEach { cat ->
                     val isSelected = cat == activeCategory
-                    Surface(
+                    val chipBg = if (isSelected) PurplePrimary else (if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
+                    val chipText = if (isSelected) Color.White else (if (isDark) PurpleAccent else PurpleTertiary)
+
+                    Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { viewModel.setCategory(cat) }
-                            .testTag("category_chip_${cat.name}"),
-                        color = if (isSelected) PurplePrimary else BlackSurfaceElevated,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isSelected) PurpleAccent else BlackBorder
-                        )
+                            .background(chipBg)
+                            .border(
+                                1.dp,
+                                if (isSelected) PurplePrimary else (if (isDark) AmoledPillBadgeBorder else LightPillBadgeBorder),
+                                RoundedCornerShape(16.dp)
+                            )
+                            .clickable { viewModel.setStudioCategory(cat) }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = cat.titleFa,
-                            color = if (isSelected) BlackBackground else TextSecondary,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            text = cat,
+                            color = chipText,
                             fontSize = 13.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                         )
                     }
                 }
             }
         }
 
-        // FORMULA EDITOR / CONFIGURATION CARD
+        // --- DYNAMIC FORMULA CONFIGURATION CARD ---
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("formula_editor_card"),
-                colors = CardDefaults.cardColors(containerColor = BlackSurface),
                 shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
+                colors = CardDefaults.cardColors(containerColor = cardBg),
+                border = androidx.compose.foundation.BorderStroke(1.dp, cardBorder),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -145,223 +119,144 @@ fun MathStudioScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = PurpleAccent,
-                                modifier = Modifier.padding(end = 6.dp)
-                            )
-                            Text(
-                                text = "تنظیم پارامترهای ${activeCategory.titleFa}",
-                                color = TextPrimary,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Category Specific Inputs
-                    CategoryInputs(activeCategory, viewModel)
-
-                    // Solve Button
-                    Button(
-                        onClick = { viewModel.solveStudioProblem() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("solve_problem_button"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PurplePrimary
-                        ),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Calculate,
-                            contentDescription = null,
-                            tint = BlackBackground,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
                         Text(
-                            text = "حل مرحله‌به‌مرحله مسئله",
-                            color = BlackBackground,
-                            fontSize = 15.sp,
+                            text = "تنظیم پارامترهای $activeCategory",
+                            color = primaryText,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        Icon(
+                            imageVector = Icons.Default.Functions,
+                            contentDescription = null,
+                            tint = PurplePrimary
+                        )
+                    }
+
+                    // Render Inputs Based on Category
+                    when (activeCategory) {
+                        "کسر و توان" -> FractionInputSection(viewModel, isDark)
+                        "معادلات و دستگاه" -> EquationInputSection(viewModel, isDark)
+                        "مشتق" -> DerivativeInputSection(viewModel, isDark)
+                        "انتگرال" -> IntegralInputSection(viewModel, isDark)
+                        "حد و رفع ابهام" -> LimitInputSection(viewModel, isDark)
+                        "سیگما و سری" -> SigmaInputSection(viewModel, isDark)
+                        "ماتریس ۲×۲" -> MatrixInputSection(viewModel, isDark)
                     }
                 }
             }
         }
 
-        // ERROR DISPLAY
-        if (error != null) {
+        // --- ERROR DISPLAY IF ANY ---
+        if (studioError != null) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF3F1322)),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF45152F)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "خطا: $error",
+                        text = studioError!!,
                         color = Color(0xFFFDA4AF),
                         fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(14.dp)
                     )
                 }
             }
         }
 
-        // SOLUTION RESULT & FORMULA
+        // --- SOLUTION & STEP-BY-STEP DISPLAY ---
         if (solution != null) {
+            // Problem Overview Card
             item {
-                val sol = solution!!
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("solution_result_card"),
-                    colors = CardDefaults.cardColors(containerColor = BlackSurfaceElevated),
                     shape = RoundedCornerShape(20.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PurplePrimary.copy(alpha = 0.5f))
+                    colors = CardDefaults.cardColors(containerColor = cardBg),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, PurplePrimary),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = sol.problemTitleFa,
-                                color = PurpleAccent,
-                                fontSize = 15.sp,
+                                text = solution!!.problemTitleFa,
+                                color = PurplePrimary,
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold
                             )
-
-                            IconButton(
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString(sol.exactResult.toStandardString()))
-                                    Toast.makeText(context, "پاسخ در کلیپ‌بورد کپی شد", Toast.LENGTH_SHORT).show()
-                                }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (solution!!.isExact) MathGreen.copy(alpha = 0.2f) else MathAmber.copy(alpha = 0.2f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = "کپی",
-                                    tint = TextSecondary
+                                Text(
+                                    text = if (solution!!.isExact) "پاسخ دقیق تحلیلی" else "پاسخ تقریبی عددی",
+                                    color = if (solution!!.isExact) MathGreen else MathAmber,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Visual Math Formula
+                        // Formula Render
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(BlackSurface, RoundedCornerShape(14.dp))
-                                .border(1.dp, BlackBorder, RoundedCornerShape(14.dp))
-                                .padding(16.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (isDark) AmoledBackground else LightBackground)
+                                .padding(12.dp)
                         ) {
-                            ScrollableMathFormula(
-                                node = sol.originalFormula,
-                                baseFontSize = 22.sp
+                            MathFormulaView(
+                                node = solution!!.initialFormula,
+                                fontSize = 22.sp
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Divider(color = cardBorder)
 
-                        // Results Tag Bar
+                        // Final Result Highlight
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Exact Result Badge
-                            Surface(
-                                color = MathGreen.copy(alpha = 0.15f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, MathGreen.copy(alpha = 0.5f)),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "جواب دقیق: ",
-                                        color = MathGreen,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    ScrollableMathFormula(
-                                        node = sol.exactResult,
-                                        baseFontSize = 14.sp,
-                                        textColor = MathGreen,
-                                        accentColor = MathGreen
-                                    )
-                                }
-                            }
-
-                            // Approximate result if available
-                            if (sol.approxResult != null) {
-                                Surface(
-                                    color = MathAmber.copy(alpha = 0.15f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, MathAmber.copy(alpha = 0.5f)),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Text(
-                                        text = sol.approxResult!!,
-                                        color = MathAmber,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        if (sol.domainNotesFa != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "یادداشت دامنه: ${sol.domainNotesFa}",
-                                color = TextMuted,
-                                fontSize = 11.sp
+                                text = "نتیجه نهایی:",
+                                color = secondaryText,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            MathFormulaView(
+                                node = solution!!.exactResult,
+                                fontSize = 20.sp,
+                                textColor = MathGreen
                             )
                         }
                     }
                 }
             }
 
-            // STEP-BY-STEP SOLUTION TITLE
+            // Steps Header
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "مراحل حل گام‌به‌گام به زبان فارسی",
-                        color = PurpleAccent,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Surface(
-                        color = PurplePrimary.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "${solution!!.steps.size} مرحله",
-                            color = PurpleAccent,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
+                Text(
+                    text = "مراحل حل گام‌به‌گام (به زبان فارسی):",
+                    color = primaryText,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
 
-            // INDIVIDUAL STEP CARDS
+            // Step items
             items(solution!!.steps) { step ->
-                StepCard(step = step)
+                StepCard(step = step, isDark = isDark)
             }
         }
 
@@ -372,471 +267,416 @@ fun MathStudioScreen(
 }
 
 @Composable
-fun StepCard(step: SolutionStep) {
+fun StepCard(step: SolutionStep, isDark: Boolean) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("solution_step_${step.stepNumber}"),
-        colors = CardDefaults.cardColors(containerColor = BlackSurface),
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) AmoledDisplaySurface else LightDisplaySurface
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isDark) BlackBorder else LightBorder
+        ),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Step Header
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        color = PurplePrimary,
-                        shape = RoundedCornerShape(8.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(PurplePrimary),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "گام ${step.stepNumber}",
-                            color = BlackBackground,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            text = "${step.stepNumber}",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = step.titleFa,
-                        color = TextPrimary,
-                        fontSize = 14.sp,
+                        color = if (isDark) TextPrimary else LightTextPrimary,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                Surface(
-                    color = BlackSurfaceElevated,
-                    shape = RoundedCornerShape(6.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PurpleSecondary.copy(alpha = 0.3f))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = step.tag,
                         color = PurpleSecondary,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        fontSize = 11.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Step Mathematical Formula Box
+            // Formula Transformation View
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(BlackBackground, RoundedCornerShape(10.dp))
-                    .border(1.dp, BlackBorder, RoundedCornerShape(10.dp))
-                    .padding(12.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isDark) AmoledBackground else LightBackground)
+                    .padding(10.dp)
             ) {
-                ScrollableMathFormula(
+                MathFormulaView(
                     node = step.formula,
-                    baseFontSize = 18.sp,
-                    textColor = TextPrimary,
-                    accentColor = PurpleAccent
+                    fontSize = 18.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Persian Explanation and Reason
+            // Persian Explanation
             Text(
                 text = step.explanationFa,
-                color = TextSecondary,
-                fontSize = 13.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.Normal
+                color = if (isDark) TextSecondary else LightTextSecondary,
+                fontSize = 13.5.sp,
+                lineHeight = 22.sp,
+                textAlign = TextAlign.Right,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+// --- SUB-SECTIONS FOR MATH INPUTS ---
+
+@Composable
+fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var num1 by remember { mutableStateOf("3") }
+    var den1 by remember { mutableStateOf("4") }
+    var op by remember { mutableStateOf("+") }
+    var num2 by remember { mutableStateOf("2") }
+    var den2 by remember { mutableStateOf("5") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Fraction 1
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(70.dp)) {
+                OutlinedTextField(
+                    value = num1,
+                    onValueChange = { num1 = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+                )
+                Divider(modifier = Modifier.padding(vertical = 4.dp), color = PurplePrimary, thickness = 2.dp)
+                OutlinedTextField(
+                    value = den1,
+                    onValueChange = { den1 = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+                )
+            }
+
+            // Operation selector
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf("+", "-", "*", "÷").forEach { sign ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (op == sign) PurplePrimary else (if (isDark) AmoledPillBadgeBg else LightPillBadgeBg))
+                            .clickable { op = sign }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = if (sign == "*") "×" else sign,
+                            color = if (op == sign) Color.White else PurpleSecondary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+            }
+
+            // Fraction 2
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(70.dp)) {
+                OutlinedTextField(
+                    value = num2,
+                    onValueChange = { num2 = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+                )
+                Divider(modifier = Modifier.padding(vertical = 4.dp), color = PurplePrimary, thickness = 2.dp)
+                OutlinedTextField(
+                    value = den2,
+                    onValueChange = { den2 = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+                )
+            }
+        }
+
+        SolveButton(title = "محاسبه کسر با مراحل") {
+            viewModel.solveStudioFraction(
+                num1 = num1.toLongOrNull() ?: 1L,
+                den1 = den1.toLongOrNull() ?: 1L,
+                op = op,
+                num2 = num2.toLongOrNull() ?: 1L,
+                den2 = den2.toLongOrNull() ?: 1L
             )
         }
     }
 }
 
 @Composable
-fun CategoryInputs(category: MathStudioCategory, viewModel: CalculatorViewModel) {
-    when (category) {
-        MathStudioCategory.FRACTIONS -> {
-            val num1 by viewModel.fracNum1.collectAsState()
-            val den1 by viewModel.fracDen1.collectAsState()
-            val op by viewModel.fracOp.collectAsState()
-            val num2 by viewModel.fracNum2.collectAsState()
-            val den2 by viewModel.fracDen2.collectAsState()
+fun EquationInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var a by remember { mutableStateOf("1") }
+    var b by remember { mutableStateOf("-5") }
+    var c by remember { mutableStateOf("6") }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Fraction 1
-                    Column(modifier = Modifier.weight(1f)) {
-                        SmallNumField("صورت ۱", num1) { viewModel.fracNum1.value = it }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        SmallNumField("مخرج ۱", den1) { viewModel.fracDen1.value = it }
-                    }
-
-                    // Operator selector
-                    Row(
-                        modifier = Modifier.weight(1.2f),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf("+", "−", "×", "÷").forEach { operator ->
-                            val opKey = when (operator) {
-                                "−" -> "-"
-                                "×" -> "*"
-                                "÷" -> "/"
-                                else -> "+"
-                            }
-                            val isSel = op == opKey
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { viewModel.fracOp.value = opKey },
-                                color = if (isSel) PurplePrimary else BlackSurfaceElevated,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) PurpleAccent else BlackBorder)
-                            ) {
-                                Text(
-                                    text = operator,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSel) BlackBackground else TextPrimary,
-                                    modifier = Modifier.padding(vertical = 10.dp),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                        }
-                    }
-
-                    // Fraction 2
-                    Column(modifier = Modifier.weight(1f)) {
-                        SmallNumField("صورت ۲", num2) { viewModel.fracNum2.value = it }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        SmallNumField("مخرج ۲", den2) { viewModel.fracDen2.value = it }
-                    }
-                }
-            }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "معادله درجه دو: ax² + bx + c = 0",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = a,
+                onValueChange = { a = it },
+                label = { Text("a") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = b,
+                onValueChange = { b = it },
+                label = { Text("b") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = c,
+                onValueChange = { c = it },
+                label = { Text("c") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
         }
-        MathStudioCategory.EQUATIONS -> {
-            val a by viewModel.quadA.collectAsState()
-            val b by viewModel.quadB.collectAsState()
-            val c by viewModel.quadC.collectAsState()
-            val isSys by viewModel.isSystemMode.collectAsState()
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Switch between Quadratic and System
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { viewModel.isSystemMode.value = false },
-                        color = if (!isSys) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "معادله درجه ۲ (ax²+bx+c=0)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (!isSys) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { viewModel.isSystemMode.value = true },
-                        color = if (isSys) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "دستگاه ۲×۲ (کرامر)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSys) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                }
-
-                if (!isSys) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SmallNumField("ضریب a", a, Modifier.weight(1f)) { viewModel.quadA.value = it }
-                        SmallNumField("ضریب b", b, Modifier.weight(1f)) { viewModel.quadB.value = it }
-                        SmallNumField("عدد ثابت c", c, Modifier.weight(1f)) { viewModel.quadC.value = it }
-                    }
-                } else {
-                    val a1 by viewModel.sysA1.collectAsState()
-                    val b1 by viewModel.sysB1.collectAsState()
-                    val c1 by viewModel.sysC1.collectAsState()
-                    val a2 by viewModel.sysA2.collectAsState()
-                    val b2 by viewModel.sysB2.collectAsState()
-                    val c2 by viewModel.sysC2.collectAsState()
-
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("معادله اول: a₁x + b₁y = c₁", fontSize = 11.sp, color = PurpleSecondary)
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            SmallNumField("a₁", a1, Modifier.weight(1f)) { viewModel.sysA1.value = it }
-                            SmallNumField("b₁", b1, Modifier.weight(1f)) { viewModel.sysB1.value = it }
-                            SmallNumField("c₁", c1, Modifier.weight(1f)) { viewModel.sysC1.value = it }
-                        }
-                        Text("معادله دوم: a₂x + b₂y = c₂", fontSize = 11.sp, color = PurpleSecondary)
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            SmallNumField("a₂", a2, Modifier.weight(1f)) { viewModel.sysA2.value = it }
-                            SmallNumField("b₂", b2, Modifier.weight(1f)) { viewModel.sysB2.value = it }
-                            SmallNumField("c₂", c2, Modifier.weight(1f)) { viewModel.sysC2.value = it }
-                        }
-                    }
-                }
-            }
-        }
-        MathStudioCategory.DERIVATIVES -> {
-            val type by viewModel.derivType.collectAsState()
-            val c1 by viewModel.derivC1.collectAsState()
-            val p1 by viewModel.derivP1.collectAsState()
-            val atX by viewModel.derivAtX.collectAsState()
-            val hasAt by viewModel.derivHasAtPoint.collectAsState()
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Function Type Chooser
-                val types = listOf(
-                    Pair("POLY", "چندجمله‌ای"),
-                    Pair("SIN", "سینوس sin(kx)"),
-                    Pair("COS", "کسینوس cos(kx)"),
-                    Pair("EXP", "نمایی e^(kx)"),
-                    Pair("LN", "لگاریتم ln(x)")
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    types.forEach { (key, label) ->
-                        val isSel = type == key
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { viewModel.derivType.value = key },
-                            color = if (isSel) PurplePrimary else BlackSurfaceElevated
-                        ) {
-                            Text(
-                                text = label,
-                                fontSize = 11.sp,
-                                color = if (isSel) BlackBackground else TextSecondary,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SmallNumField("ضریب (k)", c1, Modifier.weight(1f)) { viewModel.derivC1.value = it }
-                    if (type == "POLY") {
-                        SmallNumField("توان (n)", p1, Modifier.weight(1f)) { viewModel.derivP1.value = it }
-                    }
-                    SmallNumField("در نقطه x=", atX, Modifier.weight(1f)) {
-                        viewModel.derivAtX.value = it
-                        viewModel.derivHasAtPoint.value = it.isNotBlank()
-                    }
-                }
-            }
-        }
-        MathStudioCategory.INTEGRALS -> {
-            val c1 by viewModel.integC1.collectAsState()
-            val p1 by viewModel.integP1.collectAsState()
-            val isDef by viewModel.integIsDefinite.collectAsState()
-            val lower by viewModel.integLower.collectAsState()
-            val upper by viewModel.integUpper.collectAsState()
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.integIsDefinite.value = true },
-                        color = if (isDef) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "انتگرال معین (با کران)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDef) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 6.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.integIsDefinite.value = false },
-                        color = if (!isDef) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "انتگرال نامعین (+ C)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (!isDef) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 6.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SmallNumField("ضریب جمله", c1, Modifier.weight(1f)) { viewModel.integC1.value = it }
-                    SmallNumField("توان x", p1, Modifier.weight(1f)) { viewModel.integP1.value = it }
-                    if (isDef) {
-                        SmallNumField("کران پایین a", lower, Modifier.weight(1f)) { viewModel.integLower.value = it }
-                        SmallNumField("کران بالا b", upper, Modifier.weight(1f)) { viewModel.integUpper.value = it }
-                    }
-                }
-            }
-        }
-        MathStudioCategory.LIMITS -> {
-            val targetX by viewModel.limTargetX.collectAsState()
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "حد کسر (x² − 4x + 3) / (x − 1) با ابهام 0/0 و رفع ابهام",
-                    fontSize = 12.sp,
-                    color = PurpleSecondary
-                )
-                SmallNumField("مقدار میل کردن x →", targetX) { viewModel.limTargetX.value = it }
-            }
-        }
-        MathStudioCategory.SIGMA -> {
-            val st by viewModel.sigmaStart.collectAsState()
-            val en by viewModel.sigmaEnd.collectAsState()
-            val type by viewModel.sigmaType.collectAsState()
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(
-                        Pair("LINEAR", "جمله i"),
-                        Pair("SQUARED", "جمله i²"),
-                        Pair("POWER_2", "جمله 2ⁱ")
-                    ).forEach { (k, title) ->
-                        val isSel = type == k
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { viewModel.sigmaType.value = k },
-                            color = if (isSel) PurplePrimary else BlackSurfaceElevated
-                        ) {
-                            Text(
-                                text = title,
-                                fontSize = 11.sp,
-                                color = if (isSel) BlackBackground else TextSecondary,
-                                modifier = Modifier.padding(vertical = 6.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        }
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallNumField("کران پایین (شروع)", st, Modifier.weight(1f)) { viewModel.sigmaStart.value = it }
-                    SmallNumField("کران بالا (پایان)", en, Modifier.weight(1f)) { viewModel.sigmaEnd.value = it }
-                }
-            }
-        }
-        MathStudioCategory.MATRIX -> {
-            val a by viewModel.matA.collectAsState()
-            val b by viewModel.matB.collectAsState()
-            val c by viewModel.matC.collectAsState()
-            val d by viewModel.matD.collectAsState()
-            val op by viewModel.matOp.collectAsState()
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Operation selector
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(
-                        Pair("DETERMINANT", "دترمینان"),
-                        Pair("INVERSE", "ماتریس وارون"),
-                        Pair("TRANSPOSE", "ترانهاده Aᵀ")
-                    ).forEach { (k, title) ->
-                        val isSel = op == k
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { viewModel.matOp.value = k },
-                            color = if (isSel) PurplePrimary else BlackSurfaceElevated
-                        ) {
-                            Text(
-                                text = title,
-                                fontSize = 11.sp,
-                                color = if (isSel) BlackBackground else TextSecondary,
-                                modifier = Modifier.padding(vertical = 6.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                // 2x2 Grid
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        SmallNumField("سطر ۱ ستون ۱ (a)", a) { viewModel.matA.value = it }
-                        SmallNumField("سطر ۲ ستون ۱ (c)", c) { viewModel.matC.value = it }
-                    }
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        SmallNumField("سطر ۱ ستون ۲ (b)", b) { viewModel.matB.value = it }
-                        SmallNumField("سطر ۲ ستون ۲ (d)", d) { viewModel.matD.value = it }
-                    }
-                }
-            }
+        SolveButton(title = "حل معادله با روش دلتا") {
+            viewModel.solveStudioQuadratic(
+                a = a.toDoubleOrNull() ?: 1.0,
+                b = b.toDoubleOrNull() ?: 0.0,
+                c = c.toDoubleOrNull() ?: 0.0
+            )
         }
     }
 }
 
 @Composable
-fun SmallNumField(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    onValueChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label, fontSize = 11.sp) },
-        singleLine = true,
-        modifier = modifier.height(54.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = PurplePrimary,
-            unfocusedBorderColor = BlackBorder,
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary,
-            focusedLabelColor = PurpleAccent,
-            unfocusedLabelColor = TextMuted,
-            cursorColor = PurplePrimary
-        ),
-        shape = RoundedCornerShape(10.dp)
-    )
+fun DerivativeInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var a by remember { mutableStateOf("3") }
+    var n by remember { mutableStateOf("2") }
+    var b by remember { mutableStateOf("4") }
+    var c by remember { mutableStateOf("-1") }
+    var atPoint by remember { mutableStateOf("2") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "تابع: f(x) = axⁿ + bx + c",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(value = a, onValueChange = { a = it }, label = { Text("a") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = n, onValueChange = { n = it }, label = { Text("n (توان)") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = b, onValueChange = { b = it }, label = { Text("b") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = c, onValueChange = { c = it }, label = { Text("c") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+        OutlinedTextField(
+            value = atPoint,
+            onValueChange = { atPoint = it },
+            label = { Text("در نقطه x = (اختیاری)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        SolveButton(title = "محاسبه مشتق با قواعد تحلیلی") {
+            viewModel.solveStudioDerivative(
+                a = a.toDoubleOrNull() ?: 1.0,
+                n = n.toDoubleOrNull() ?: 1.0,
+                b = b.toDoubleOrNull() ?: 0.0,
+                c = c.toDoubleOrNull() ?: 0.0,
+                atPoint = atPoint.toDoubleOrNull()
+            )
+        }
+    }
+}
+
+@Composable
+fun IntegralInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var a by remember { mutableStateOf("2") }
+    var n by remember { mutableStateOf("1") }
+    var b by remember { mutableStateOf("3") }
+    var lower by remember { mutableStateOf("0") }
+    var upper by remember { mutableStateOf("2") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "تابع انتگرال‌ده: axⁿ + b",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = a, onValueChange = { a = it }, label = { Text("a") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = n, onValueChange = { n = it }, label = { Text("n (توان)") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = b, onValueChange = { b = it }, label = { Text("b") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = lower, onValueChange = { lower = it }, label = { Text("کران پایین a") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = upper, onValueChange = { upper = it }, label = { Text("کران بالای b") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+
+        SolveButton(title = "محاسبه انتگرال با پادمشتق") {
+            viewModel.solvePolynomialIntegral(
+                a = a.toDoubleOrNull() ?: 1.0,
+                n = n.toDoubleOrNull() ?: 1.0,
+                b = b.toDoubleOrNull() ?: 0.0,
+                lower = lower.toDoubleOrNull(),
+                upper = upper.toDoubleOrNull()
+            )
+        }
+    }
+}
+
+@Composable
+fun LimitInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var a by remember { mutableStateOf("3") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "رفع ابهام صفر صفرم: lim_{x → a} (x² − a²) / (x − a)",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        OutlinedTextField(
+            value = a,
+            onValueChange = { a = it },
+            label = { Text("مقدار حد a") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        SolveButton(title = "محاسبه حد و رفع ابهام") {
+            viewModel.solveStudioLimit(a.toDoubleOrNull() ?: 1.0)
+        }
+    }
+}
+
+@Composable
+fun SigmaInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var n by remember { mutableStateOf("10") }
+    var power by remember { mutableStateOf("1") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "سیگما و مجموع جملات: ∑_{k=1}^n k^p",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = n, onValueChange = { n = it }, label = { Text("تعداد جملات n") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = power, onValueChange = { power = it }, label = { Text("توان جملات p (1 یا 2)") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+
+        SolveButton(title = "محاسبه فرمول مجموع") {
+            viewModel.solveStudioSigma(
+                n = n.toLongOrNull() ?: 10L,
+                power = power.toIntOrNull() ?: 1
+            )
+        }
+    }
+}
+
+@Composable
+fun MatrixInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var a by remember { mutableStateOf("4") }
+    var b by remember { mutableStateOf("2") }
+    var c by remember { mutableStateOf("3") }
+    var d by remember { mutableStateOf("1") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "ماتریس ۲×۲ : [ a  b ; c  d ]",
+            fontSize = 14.sp,
+            color = PurpleSecondary,
+            fontWeight = FontWeight.Medium
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = a, onValueChange = { a = it }, label = { Text("a") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = b, onValueChange = { b = it }, label = { Text("b") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = c, onValueChange = { c = it }, label = { Text("c") }, modifier = Modifier.weight(1f), singleLine = true)
+            OutlinedTextField(value = d, onValueChange = { d = it }, label = { Text("d") }, modifier = Modifier.weight(1f), singleLine = true)
+        }
+
+        SolveButton(title = "محاسبه دترمینان و ماتریس وارون") {
+            viewModel.solveStudioMatrix(
+                a = a.toDoubleOrNull() ?: 1.0,
+                b = b.toDoubleOrNull() ?: 0.0,
+                c = c.toDoubleOrNull() ?: 0.0,
+                d = d.toDoubleOrNull() ?: 1.0
+            )
+        }
+    }
+}
+
+@Composable
+fun SolveButton(title: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .testTag("solve_button"),
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PurplePrimary,
+            contentColor = Color.White
+        )
+    ) {
+        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+    }
 }

@@ -13,7 +13,8 @@ object ScientificEngine {
         DEGREE, RADIAN
     }
 
-    private val MC = MathContext(34, RoundingMode.HALF_UP)
+    // High precision supporting 36+ digits
+    private val MC = MathContext(100, RoundingMode.HALF_UP)
 
     fun factorial(n: Long): BigInteger {
         if (n < 0) throw IllegalArgumentException("فاکتوریل برای اعداد منفی تعریف نشده است")
@@ -47,7 +48,7 @@ object ScientificEngine {
     }
 
     /**
-     * Evaluates a mathematical expression string with high precision
+     * Evaluates a mathematical expression string with up to 36+ digits precision
      */
     fun evaluate(expression: String, angleMode: AngleMode): EvaluationResult {
         try {
@@ -70,9 +71,10 @@ object ScientificEngine {
             .replace("×", "*")
             .replace("÷", "/")
             .replace("−", "-")
-            .replace("π", "3.1415926535897932384626433832795028841971")
-            .replace("e", "2.7182818284590452353602874713526624977572")
+            .replace("π", "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679")
+            .replace("e", "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274")
             .replace(",", "")
+            .replace("٬", "")
             .trim()
     }
 
@@ -109,7 +111,6 @@ object ScientificEngine {
                     expectUnary = false
                 }
                 c == '(' -> {
-                    // Check implicit multiplication: e.g. 5(2) -> 5*(2)
                     if (tokens.isNotEmpty() && (tokens.last() is Token.Num || tokens.last() is Token.RightParen)) {
                         tokens.add(Token.Op("*", 2, false))
                     }
@@ -125,7 +126,6 @@ object ScientificEngine {
                 c == '+' || c == '-' -> {
                     if (expectUnary) {
                         if (c == '-') {
-                            // Unary minus: represented as 0 - x
                             tokens.add(Token.Num(BigDecimal.ZERO))
                             tokens.add(Token.Op("-", 1, false))
                         }
@@ -164,7 +164,6 @@ object ScientificEngine {
                         i++
                     }
                     val word = sb.toString().lowercase()
-                    // If preceding was a number, e.g. 2sin(x) -> 2*sin(x)
                     if (tokens.isNotEmpty() && (tokens.last() is Token.Num || tokens.last() is Token.RightParen)) {
                         tokens.add(Token.Op("*", 2, false))
                     }
@@ -257,18 +256,14 @@ object ScientificEngine {
                             if (b.compareTo(BigDecimal.ZERO) == 0) throw ArithmeticException("تقسیم بر صفر امکان‌پذیر نیست")
                             a.divide(b, MC)
                         }
-                        "%" -> {
-                            // a % of b or remainder
-                            a.remainder(b, MC)
-                        }
+                        "%" -> a.remainder(b, MC)
                         "^" -> {
-                            // arbitrary power
                             try {
                                 val bInt = b.intValueExact()
                                 a.pow(bInt, MC)
                             } catch (e: Exception) {
                                 val doubleVal = a.toDouble().pow(b.toDouble())
-                                if (doubleVal.isNaN() || doubleVal.isInfinite()) throw ArithmeticException("محاسبه توان با این اعداد نامعتبر است")
+                                if (doubleVal.isNaN() || doubleVal.isInfinite()) throw ArithmeticException("محاسبه توان نامعتبر است")
                                 BigDecimal(doubleVal, MC)
                             }
                         }
@@ -349,31 +344,59 @@ object ScientificEngine {
     }
 
     private fun formatResult(num: BigDecimal): String {
-        // Handle zero
         if (num.compareTo(BigDecimal.ZERO) == 0) return "0"
 
         // If integer or scale <= 0
         if (num.scale() <= 0 || num.remainder(BigDecimal.ONE).compareTo(BigDecimal.ZERO) == 0) {
             val bigInt = num.toBigInteger()
             val plain = bigInt.toString()
-            if (plain.length > 20) {
-                // scientific notation
-                val df = DecimalFormat("0.######E0")
+            // Support numbers up to 36 digits without scientific notation!
+            if (plain.length > 36) {
+                val df = DecimalFormat("0.################E0")
                 return df.format(num.toDouble()).replace("E", " × 10^")
             }
-            val df = DecimalFormat("#,##0")
-            return df.format(bigInt)
+            // Format with commas: e.g. 1,205,000
+            val sb = StringBuilder()
+            val isNeg = plain.startsWith("-")
+            val digits = if (isNeg) plain.substring(1) else plain
+            val len = digits.length
+            for (i in 0 until len) {
+                if (i > 0 && (len - i) % 3 == 0) {
+                    sb.append(",")
+                }
+                sb.append(digits[i])
+            }
+            return if (isNeg) "-$sb" else sb.toString()
         }
 
-        // Float formatting
-        val doubleVal = num.toDouble()
-        if (abs(doubleVal) >= 1e15 || (abs(doubleVal) < 1e-6 && abs(doubleVal) > 0)) {
-            val df = DecimalFormat("0.########E0")
-            return df.format(doubleVal).replace("E", " × 10^")
+        // Float / Decimal formatting up to 36 digits
+        val plainStr = num.toPlainString()
+        val parts = plainStr.split(".")
+        val intPart = parts[0]
+        val decPart = if (parts.size > 1) parts[1] else ""
+
+        if (intPart.length > 36) {
+            val df = DecimalFormat("0.################E0")
+            return df.format(num.toDouble()).replace("E", " × 10^")
         }
 
-        val df = DecimalFormat("#,##0.##########")
-        return df.format(num)
+        // Add commas to integer part
+        val sb = StringBuilder()
+        val isNeg = intPart.startsWith("-")
+        val digits = if (isNeg) intPart.substring(1) else intPart
+        val len = digits.length
+        for (i in 0 until len) {
+            if (i > 0 && (len - i) % 3 == 0) {
+                sb.append(",")
+            }
+            sb.append(digits[i])
+        }
+        val formattedInt = if (isNeg) "-$sb" else sb.toString()
+
+        val maxDecLength = min(36, decPart.length)
+        val formattedDec = decPart.take(maxDecLength)
+
+        return if (formattedDec.isNotEmpty()) "$formattedInt.$formattedDec" else formattedInt
     }
 
     sealed class EvaluationResult {

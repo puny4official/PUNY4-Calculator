@@ -2,89 +2,61 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.entity.CalculationRecord
 import com.example.ui.CalculatorViewModel
-import com.example.ui.theme.BlackBackground
-import com.example.ui.theme.BlackBorder
-import com.example.ui.theme.BlackSurface
-import com.example.ui.theme.BlackSurfaceElevated
-import com.example.ui.theme.MathGreen
-import com.example.ui.theme.PurpleAccent
-import com.example.ui.theme.PurplePrimary
-import com.example.ui.theme.PurpleSecondary
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.ui.theme.*
 
 @Composable
 fun HistoryDialog(
     viewModel: CalculatorViewModel,
     onDismiss: () -> Unit
 ) {
-    val historyList by viewModel.historyList.collectAsState()
-    val favoriteList by viewModel.favoriteList.collectAsState()
-    var selectedTab by remember { mutableStateOf(0) } // 0: All, 1: Favorites
+    val historyList by viewModel.historyList.collectAsState(initial = emptyList())
+    val themeMode by viewModel.themeMode.collectAsState()
+    val isDark = themeMode == AppThemeMode.AMOLED_DARK
 
-    val displayedList = if (selectedTab == 0) historyList else favoriteList
+    val bg = if (isDark) AmoledDisplaySurface else LightDisplaySurface
+    val primaryText = if (isDark) TextPrimary else LightTextPrimary
+    val secondaryText = if (isDark) TextSecondary else LightTextSecondary
+    val borderCol = if (isDark) BlackBorder else LightBorder
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = bg),
+            border = androidx.compose.foundation.BorderStroke(1.dp, borderCol),
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
-                .testTag("history_dialog_card"),
-            colors = CardDefaults.cardColors(containerColor = BlackSurface),
-            shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
+                .padding(vertical = 16.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 // Header
                 Row(
@@ -92,61 +64,28 @@ fun HistoryDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "تاریخچه و علاقه‌مندی‌ها",
-                        color = PurpleAccent,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.History, contentDescription = null, tint = PurplePrimary)
+                        Text(
+                            text = "تاریخچه محاسبات",
+                            color = primaryText,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "بستن", tint = TextSecondary)
+                        Icon(Icons.Default.Close, contentDescription = "بستن", tint = secondaryText)
                     }
                 }
 
-                // Tabs
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { selectedTab = 0 },
-                        color = if (selectedTab == 0) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "همه تاریخچه (${historyList.size})",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (selectedTab == 0) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { selectedTab = 1 },
-                        color = if (selectedTab == 1) PurplePrimary else BlackSurfaceElevated
-                    ) {
-                        Text(
-                            text = "نشان‌شده‌ها (${favoriteList.size})",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (selectedTab == 1) BlackBackground else TextSecondary,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                }
+                Divider(color = borderCol, modifier = Modifier.padding(vertical = 8.dp))
 
                 // List
-                if (displayedList.isEmpty()) {
+                if (historyList.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -154,8 +93,8 @@ fun HistoryDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "موردی در تاریخچه یافت نشد.",
-                            color = TextMuted,
+                            text = "هنوز محاسبه‌ای ذخیره نشده است.",
+                            color = secondaryText,
                             fontSize = 14.sp
                         )
                     }
@@ -166,34 +105,32 @@ fun HistoryDialog(
                             .fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(displayedList) { record ->
+                        items(historyList) { item ->
                             HistoryItemCard(
-                                record = record,
-                                onRestore = { viewModel.restoreCalculation(record) },
-                                onToggleFav = { viewModel.toggleFavorite(record) },
-                                onDelete = { viewModel.deleteHistoryItem(record) }
+                                item = item,
+                                isDark = isDark,
+                                onRestore = { viewModel.restoreCalculation(item) }
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Bottom Clear Button
-                Button(
-                    onClick = { viewModel.clearAllHistory() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = BlackSurfaceElevated),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.padding(end = 6.dp)
-                    )
-                    Text(text = "پاک کردن تاریخچه عادی", color = TextSecondary, fontSize = 13.sp)
+                // Footer (Clear button)
+                if (historyList.isNotEmpty()) {
+                    Divider(color = borderCol, modifier = Modifier.padding(vertical = 8.dp))
+                    Button(
+                        onClick = { viewModel.clearHistory() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isDark) AmoledKeyClearBg else LightKeyClearBg,
+                            contentColor = if (isDark) AmoledKeyClearText else LightKeyClearText
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "پاک کردن کل تاریخچه", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -202,72 +139,69 @@ fun HistoryDialog(
 
 @Composable
 fun HistoryItemCard(
-    record: CalculationRecord,
-    onRestore: () -> Unit,
-    onToggleFav: () -> Unit,
-    onDelete: () -> Unit
+    item: CalculationRecord,
+    isDark: Boolean,
+    onRestore: () -> Unit
 ) {
     Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) AmoledBackground else LightBackground
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isDark) AmoledPillBadgeBorder else LightPillBadgeBorder
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onRestore),
-        colors = CardDefaults.cardColors(containerColor = BlackBackground),
-        shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
+            .clickable { onRestore() }
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = record.title,
-                    color = PurpleSecondary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onToggleFav) {
-                        Icon(
-                            imageVector = if (record.isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = "نشان کردن",
-                            tint = if (record.isFavorite) PurpleAccent else TextMuted
-                        )
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "حذف",
-                            tint = TextMuted
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = item.categoryFa,
+                        color = PurpleSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+
+                Text(
+                    text = item.mode,
+                    color = PurplePrimary,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace
+                )
             }
 
             Text(
-                text = record.expression,
-                color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
+                text = item.expression,
+                color = if (isDark) TextSecondary else LightTextSecondary,
+                fontSize = 14.sp,
+                fontFamily = FontFamily.Monospace
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             Text(
-                text = "= ${record.exactResult}",
+                text = "= ${item.exactResult}",
                 color = MathGreen,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp
-            )
-
-            val dateStr = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault()).format(Date(record.timestamp))
-            Text(
-                text = dateStr,
-                color = TextMuted,
-                fontSize = 10.sp,
-                modifier = Modifier.padding(top = 4.dp)
+                textAlign = TextAlign.End,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

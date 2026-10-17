@@ -1,58 +1,56 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.ui.theme.BlackBorder
-import com.example.ui.theme.BlackSurface
-import com.example.ui.theme.MathAmber
-import com.example.ui.theme.MathGreen
-import com.example.ui.theme.PurpleAccent
-import com.example.ui.theme.PurpleSecondary
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import com.example.ui.CalculatorViewModel
+import com.example.ui.theme.*
 
 @Composable
-fun ScopeDialog(onDismiss: () -> Unit) {
+fun ScopeDialog(
+    viewModel: CalculatorViewModel,
+    onDismiss: () -> Unit
+) {
+    val themeMode by viewModel.themeMode.collectAsState()
+    val isDark = themeMode == AppThemeMode.AMOLED_DARK
+
+    val bg = if (isDark) AmoledDisplaySurface else LightDisplaySurface
+    val primaryText = if (isDark) TextPrimary else LightTextPrimary
+    val secondaryText = if (isDark) TextSecondary else LightTextSecondary
+    val borderCol = if (isDark) BlackBorder else LightBorder
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = bg),
+            border = androidx.compose.foundation.BorderStroke(1.dp, borderCol),
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.85f),
-            colors = CardDefaults.cardColors(containerColor = BlackSurface),
-            shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, BlackBorder)
+                .fillMaxHeight(0.85f)
+                .padding(vertical = 16.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 // Header
                 Row(
@@ -60,90 +58,84 @@ fun ScopeDialog(onDismiss: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = PurpleAccent,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = PurplePrimary)
                         Text(
-                            text = "راهنما و شفاف‌سازی دامنه ریاضی",
-                            color = PurpleAccent,
-                            fontSize = 15.sp,
+                            text = "دامنه و قابلیت‌های موتور ریاضی",
+                            color = primaryText,
+                            fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
+
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "بستن", tint = TextSecondary)
+                        Icon(Icons.Default.Close, contentDescription = "بستن", tint = secondaryText)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Divider(color = borderCol, modifier = Modifier.padding(vertical = 8.dp))
 
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState()),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "اپلیکیشن PUNY4 Calculator با موتور محاسبات نمادین و عددی آفلاین طراحی شده است. مطابق اصول مهندسی و شفافیت علمی، محدوده قابلیت‌های پشتیبانی‌شده و محدودیت‌ها به شرح زیر است:",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp
-                    )
-
-                    // Supported Features
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = BlackSurface),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MathGreen.copy(alpha = 0.4f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = MathGreen, modifier = Modifier.padding(end = 6.dp))
-                                Text("قابلیت‌های پشتیبانی‌شده با حل گام‌به‌گام:", color = MathGreen, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = if (isDark) AmoledBackground else LightBackground),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MathGreen, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("قابلیت‌های پشتیبانی‌شده (آفلاین)", color = MathGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                                Text("• محاسبات علمی با دقت فوق‌العاده بالا تا ۳۶ رقم معنادار", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• تفکیک سه‌رقمی اعداد با کاما ( ، ) و تلفظ حروفی فارسی عدد", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• محاسبات چهار عمل اصلی کسرها با ک.م.م و ب.م.م مرحله‌به‌مرحله", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• حل تحلیلی معادلات درجه دوم با بررسی علامت دلتا (حقیقی و مختلط)", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• مشتق توابع چندجمله‌ای با قاعده توان و مجموع و محاسبه در نقطه", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• انتگرال معین و نامعین با تابع پادمشتق و قضیه اساسی حسابان", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• رفع ابهام حد صفر بر صفر با اتحادهای جبری مزدوج", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• سری و سیگما با روابط گاوس و فرمول مجموع مربعات", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• دترمینان، وارون و دستگاه دو معادله خطی به روش کرامر", color = secondaryText, fontSize = 12.5.sp)
                             }
-                            FeatureItem("کسرها و اعداد گویا", "چهارعمل اصلی، ک.م.م، ب.م.م، هم‌مخرج‌سازی و تحویل کسر به ساده‌ترین فرم.")
-                            FeatureItem("معادلات درجه ۱ و ۲", "روش کامل دلتا (Δ)، ریشه‌های حقیقی متمایز، مضاعف و مختلط، مختصات رأس سهمی.")
-                            FeatureItem("دستگاه دو معادله و دو مجهول", "حل تحلیلی با قاعده دترمینان کرامر (D, Dx, Dy) و بررسی جواب‌های بی‌شمار یا تناقض.")
-                            FeatureItem("مشتق‌گیری تحلیلی", "قاعده توان، ضریب ثابت، زنجیره‌ای، توابع مثلثاتی، نمایی e^x، لگاریتم ln(x) و محاسبه شیب در نقطه.")
-                            FeatureItem("انتگرال‌گیری معین و نامعین", "پادمشتق F(x) با ثابت C و قضیه اساسی حسابان با کران‌های بالا و پایین [F(b) - F(a)].")
-                            FeatureItem("محاسبه حد و رفع ابهام", "تشخیص ابهام صفر بر صفر (0/0)، فاکتورگیری عامل صفرکننده (x - a) و قاعده هوپیتال.")
-                            FeatureItem("سیگما و سری‌ها", "بسط متوالی جملات و فرمول بسته گوس برای مجموع اعداد متوالی.")
-                            FeatureItem("ماتریس ۲×۲", "محاسبه دترمینان ad-bc، ماتریس ترانهاده، الحاقی و وارون A⁻¹ با شرط تکین بودن.")
-                            FeatureItem("محاسبات علمی بزرگ", "دقت محاسباتی بالا (BigDecimal)، فاکتوریل تا ۱۰۰۰!، جایگشت و ترکیب.")
                         }
                     }
 
-                    // Limitations
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = BlackSurface),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MathAmber.copy(alpha = 0.4f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = MathAmber, modifier = Modifier.padding(end = 6.dp))
-                                Text("موارد پشتیبانی‌نشده و محدودیت‌های موتور آفلاین:", color = MathAmber, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = if (isDark) AmoledKeyClearBg else LightKeyClearBg),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Warning, contentDescription = null, tint = MathPink, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("محدودیت‌ها و موارد پشتیبانی‌نشده", color = if (isDark) AmoledKeyClearText else LightKeyClearText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                                Text("• انتگرال توابع غیرمقدماتی (مانند انتگرال گوسی e^(-x²)) فاقد پادمشتق بسته تحلیلی هستند.", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• معادلات چندجمله‌ای درجه ۵ و بالاتر به دلیل قضیه آبل-روفینی فاقد فرمول رادیکالی عام هستند.", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• معادلات دیفرانسیل جزئی غیرخطی در بستر آفلاین موبایل پشتیبانی نمی‌شوند.", color = secondaryText, fontSize = 12.5.sp)
                             }
-                            FeatureItem("معادلات جبری درجه ۵ و بالاتر", "طبق قضیه آبل-روفینی، هیچ فرمول رادیکالی کلی جبری برای این معادلات وجود ندارد.")
-                            FeatureItem("انتگرال‌های غیراولیه الپتیک", "توابعی مانند e^(-x²) که فاقد تابع پادمشتق بسته تحلیلی هستند.")
-                            FeatureItem("ماتریس‌های ابعاد بسیار بزرگ (بالاتر از ۴×۴)", "به منظور حفظ سرعت و روانی رابط کاربری بدون لگ در پردازش موبایل محدود شده است.")
-                            FeatureItem("توابع غیرمداوم با نقاط تکینگی اساسی", "حدود در نقاطی که تابع به شکل نوسانی بی‌نهایت رفتار می‌کند (مانند sin(1/x) در x=0).")
                         }
                     }
+                }
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("متوجه شدم", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun FeatureItem(title: String, desc: String) {
-    Column {
-        Text(text = "• $title:", color = PurpleSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = desc, color = TextMuted, fontSize = 11.sp, lineHeight = 16.sp, modifier = Modifier.padding(start = 12.dp))
     }
 }

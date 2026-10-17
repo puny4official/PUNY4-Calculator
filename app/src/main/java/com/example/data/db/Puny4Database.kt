@@ -15,7 +15,7 @@ abstract class Puny4Database : RoomDatabase() {
         @Volatile
         private var INSTANCE: Puny4Database? = null
 
-        fun getInstance(context: Context): Puny4Database {
+        fun getDatabase(context: Context): Puny4Database {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,

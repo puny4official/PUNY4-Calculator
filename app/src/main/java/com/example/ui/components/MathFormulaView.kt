@@ -1,34 +1,18 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,30 +21,34 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.math.model.MathNode
+import com.example.ui.theme.MathAmber
 import com.example.ui.theme.MathCyan
+import com.example.ui.theme.MathGreen
 import com.example.ui.theme.MathPink
-import com.example.ui.theme.PurpleAccent
-import com.example.ui.theme.PurplePrimary
 import com.example.ui.theme.PurpleSecondary
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
 
+/**
+ * High quality visual mathematical formula renderer for Compose.
+ * Displays real fractions (numerator over denominator with fraction bar),
+ * radicals with indices, powers, integrals with upper/lower bounds,
+ * limits, sigmas, and matrices.
+ */
 @Composable
-fun ScrollableMathFormula(
+fun MathFormulaView(
     node: MathNode,
     modifier: Modifier = Modifier,
-    baseFontSize: TextUnit = 22.sp,
-    textColor: Color = TextPrimary,
-    accentColor: Color = PurpleAccent
+    fontSize: TextUnit = 20.sp,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    accentColor: Color = PurpleSecondary
 ) {
-    val scrollState = rememberScrollState()
     Box(
-        modifier = modifier.horizontalScroll(scrollState),
+        modifier = modifier
+            .horizontalScroll(rememberScrollState()),
         contentAlignment = Alignment.CenterStart
     ) {
-        MathFormulaView(
+        RenderMathNode(
             node = node,
-            baseFontSize = baseFontSize,
+            fontSize = fontSize,
             textColor = textColor,
             accentColor = accentColor
         )
@@ -68,77 +56,78 @@ fun ScrollableMathFormula(
 }
 
 @Composable
-fun MathFormulaView(
+fun RenderMathNode(
     node: MathNode,
-    modifier: Modifier = Modifier,
-    baseFontSize: TextUnit = 20.sp,
-    textColor: Color = TextPrimary,
-    accentColor: Color = PurpleAccent,
-    isExponent: Boolean = false
+    fontSize: TextUnit = 20.sp,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    accentColor: Color = PurpleSecondary,
+    subScale: Float = 0.72f
 ) {
-    val currentFontSize = if (isExponent) (baseFontSize.value * 0.75f).sp else baseFontSize
+    val smallFontSize = (fontSize.value * subScale).sp
 
     when (node) {
         is MathNode.Number -> {
             Text(
                 text = node.value,
-                fontSize = currentFontSize,
+                fontSize = fontSize,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.Serif,
-                color = textColor,
-                modifier = modifier
+                color = textColor
             )
         }
         is MathNode.Variable -> {
             Text(
                 text = node.name,
-                fontSize = currentFontSize,
+                fontSize = fontSize,
                 fontStyle = FontStyle.Italic,
-                fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.SemiBold,
-                color = MathCyan,
-                modifier = modifier
+                fontFamily = FontFamily.Serif,
+                color = MathCyan
             )
         }
         is MathNode.Constant -> {
             Text(
                 text = node.symbol,
-                fontSize = currentFontSize,
-                fontFamily = FontFamily.Serif,
+                fontSize = fontSize,
                 fontWeight = FontWeight.Bold,
-                color = PurplePrimary,
-                modifier = modifier
+                fontFamily = FontFamily.Serif,
+                color = MathAmber
             )
         }
         is MathNode.Fraction -> {
-            // Real 2D vertical fraction: Numerator over fraction bar over Denominator
+            // Real fraction layout: stacked numerator, horizontal bar, denominator
             Column(
-                modifier = modifier.padding(horizontal = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(horizontal = 4.dp)
             ) {
                 // Numerator
-                Box(modifier = Modifier.padding(bottom = 3.dp)) {
-                    MathFormulaView(
+                Box(
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    RenderMathNode(
                         node = node.numerator,
-                        baseFontSize = (currentFontSize.value * 0.9f).sp,
+                        fontSize = (fontSize.value * 0.9f).sp,
                         textColor = textColor,
                         accentColor = accentColor
                     )
                 }
-                // Fraction horizontal line
+                // Fraction line
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 2.dp)
+                        .fillMaxWidth()
                         .height(2.dp)
-                        .widthIn(min = 24.dp)
                         .background(accentColor, RoundedCornerShape(1.dp))
                 )
                 // Denominator
-                Box(modifier = Modifier.padding(top = 3.dp)) {
-                    MathFormulaView(
+                Box(
+                    modifier = Modifier.padding(top = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    RenderMathNode(
                         node = node.denominator,
-                        baseFontSize = (currentFontSize.value * 0.9f).sp,
+                        fontSize = (fontSize.value * 0.9f).sp,
                         textColor = textColor,
                         accentColor = accentColor
                     )
@@ -146,218 +135,206 @@ fun MathFormulaView(
             }
         }
         is MathNode.Power -> {
-            // Real superscript layout
             Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                MathFormulaView(
+                RenderMathNode(
                     node = node.base,
-                    baseFontSize = currentFontSize,
+                    fontSize = fontSize,
                     textColor = textColor,
                     accentColor = accentColor
                 )
-                Box(modifier = Modifier.offset(y = (-6).dp)) {
-                    MathFormulaView(
+                // Elevated exponent
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-fontSize.value * 0.35f).dp)
+                        .padding(start = 2.dp)
+                ) {
+                    RenderMathNode(
                         node = node.exponent,
-                        baseFontSize = currentFontSize,
+                        fontSize = smallFontSize,
                         textColor = accentColor,
-                        accentColor = accentColor,
-                        isExponent = true
+                        accentColor = accentColor
                     )
                 }
             }
         }
         is MathNode.Root -> {
-            // Radical with vinculum bar
             Row(
-                modifier = modifier.padding(horizontal = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 2.dp)
             ) {
-                // Index (if cube root, 4th root, etc.)
                 if (node.index != null) {
-                    Box(modifier = Modifier.offset(y = (-6).dp)) {
-                        MathFormulaView(
+                    Box(
+                        modifier = Modifier
+                            .offset(y = (-fontSize.value * 0.3f).dp)
+                            .padding(end = 1.dp)
+                    ) {
+                        RenderMathNode(
                             node = node.index,
-                            baseFontSize = (currentFontSize.value * 0.65f).sp,
+                            fontSize = (fontSize.value * 0.6f).sp,
                             textColor = accentColor,
                             accentColor = accentColor
                         )
                     }
                 }
-                // Radical sign
                 Text(
                     text = "√",
-                    fontSize = (currentFontSize.value * 1.35f).sp,
-                    color = accentColor,
+                    fontSize = (fontSize.value * 1.3f).sp,
                     fontWeight = FontWeight.Light,
-                    fontFamily = FontFamily.Serif
+                    fontFamily = FontFamily.Serif,
+                    color = accentColor
                 )
-                // Overline vinculum covering the radicand
-                Column(
+                Box(
                     modifier = Modifier
-                        .offset(x = (-1).dp)
-                        .padding(end = 3.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(accentColor)
-                    )
-                    Box(modifier = Modifier.padding(top = 2.dp, start = 2.dp, end = 2.dp)) {
-                        MathFormulaView(
-                            node = node.radicand,
-                            baseFontSize = currentFontSize,
-                            textColor = textColor,
-                            accentColor = accentColor
+                        .padding(start = 1.dp)
+                        .border(
+                            width = 0.dp,
+                            color = Color.Transparent
                         )
+                ) {
+                    // Overbar across radicand
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .background(accentColor)
+                        )
+                        Box(modifier = Modifier.padding(top = 2.dp, start = 2.dp, end = 2.dp)) {
+                            RenderMathNode(
+                                node = node.radicand,
+                                fontSize = fontSize,
+                                textColor = textColor,
+                                accentColor = accentColor
+                            )
+                        }
                     }
                 }
             }
         }
         is MathNode.Addition -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MathFormulaView(node.left, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RenderMathNode(node.left, fontSize, textColor, accentColor)
                 Text(
                     text = " + ",
-                    fontSize = currentFontSize,
-                    color = MathPink,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
                 )
-                MathFormulaView(node.right, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.right, fontSize, textColor, accentColor)
             }
         }
         is MathNode.Subtraction -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MathFormulaView(node.left, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RenderMathNode(node.left, fontSize, textColor, accentColor)
                 Text(
                     text = " − ",
-                    fontSize = currentFontSize,
-                    color = MathPink,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
                 )
-                MathFormulaView(node.right, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.right, fontSize, textColor, accentColor)
             }
         }
         is MathNode.Multiplication -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MathFormulaView(node.left, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
-                if (node.showDot) {
-                    Text(
-                        text = " · ",
-                        fontSize = currentFontSize,
-                        color = MathPink,
-                        fontWeight = FontWeight.Bold
-                    )
-                } else {
-                    Spacer(modifier = Modifier.width(2.dp))
-                }
-                MathFormulaView(node.right, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RenderMathNode(node.left, fontSize, textColor, accentColor)
+                val sign = if (node.showDot) " · " else " × "
+                Text(
+                    text = sign,
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+                RenderMathNode(node.right, fontSize, textColor, accentColor)
             }
         }
         is MathNode.Division -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MathFormulaView(node.left, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RenderMathNode(node.left, fontSize, textColor, accentColor)
                 Text(
                     text = " ÷ ",
-                    fontSize = currentFontSize,
-                    color = MathPink,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
                 )
-                MathFormulaView(node.right, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.right, fontSize, textColor, accentColor)
             }
         }
         is MathNode.FunctionCall -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = node.name,
-                    fontSize = currentFontSize,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PurpleSecondary
+                    text = "${node.name}",
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Serif,
+                    color = MathPink
                 )
-                Text(text = "(", fontSize = currentFontSize, color = TextSecondary)
-                MathFormulaView(node.arg, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
-                Text(text = ")", fontSize = currentFontSize, color = TextSecondary)
+                Text(
+                    text = "(",
+                    fontSize = fontSize,
+                    color = textColor
+                )
+                RenderMathNode(node.arg, fontSize, textColor, accentColor)
+                Text(
+                    text = ")",
+                    fontSize = fontSize,
+                    color = textColor
+                )
             }
         }
         is MathNode.Limit -> {
-            // Limit notation: "lim" with "x -> a" stacked below
-            Row(
-                modifier = modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier.padding(end = 6.dp)
                 ) {
                     Text(
                         text = "lim",
-                        fontSize = (currentFontSize.value * 1.1f).sp,
+                        fontSize = (fontSize.value * 1.1f).sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Serif,
-                        color = PurplePrimary
+                        color = accentColor
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.offset(y = (-2).dp)
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "${node.variable}→",
-                            fontSize = (currentFontSize.value * 0.65f).sp,
-                            color = MathCyan
+                            text = "${node.variable} → ",
+                            fontSize = (fontSize.value * 0.65f).sp,
+                            color = textColor
                         )
-                        MathFormulaView(
+                        RenderMathNode(
                             node = node.target,
-                            baseFontSize = (currentFontSize.value * 0.65f).sp,
+                            fontSize = (fontSize.value * 0.65f).sp,
                             textColor = textColor,
                             accentColor = accentColor
                         )
                         if (node.direction.isNotEmpty()) {
                             Text(
                                 text = node.direction,
-                                fontSize = (currentFontSize.value * 0.5f).sp,
+                                fontSize = (fontSize.value * 0.55f).sp,
                                 color = accentColor
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.width(6.dp))
-                MathFormulaView(node.expr, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.expr, fontSize, textColor, accentColor)
             }
         }
         is MathNode.Derivative -> {
-            // Derivative notation: d/dx [f(x)] or d^n/dx^n
-            Row(
-                modifier = modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // d / dx or d^n / dx^n
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier.padding(end = 4.dp)
                 ) {
-                    val orderStr = if (node.order > 1) "${node.order}" else ""
+                    val dTop = if (node.order > 1) "d${node.order}" else "d"
                     Text(
-                        text = "d$orderStr",
-                        fontSize = (currentFontSize.value * 0.8f).sp,
-                        fontStyle = FontStyle.Italic,
+                        text = dTop,
+                        fontSize = (fontSize.value * 0.85f).sp,
+                        fontWeight = FontWeight.SemiBold,
                         fontFamily = FontFamily.Serif,
-                        color = PurplePrimary
+                        color = accentColor
                     )
                     Box(
                         modifier = Modifier
@@ -365,94 +342,96 @@ fun MathFormulaView(
                             .height(1.5.dp)
                             .background(accentColor)
                     )
+                    val dBottom = if (node.order > 1) "d${node.variable}${node.order}" else "d${node.variable}"
                     Text(
-                        text = "d${node.variable}$orderStr",
-                        fontSize = (currentFontSize.value * 0.8f).sp,
-                        fontStyle = FontStyle.Italic,
+                        text = dBottom,
+                        fontSize = (fontSize.value * 0.85f).sp,
+                        fontWeight = FontWeight.SemiBold,
                         fontFamily = FontFamily.Serif,
-                        color = PurplePrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "[", fontSize = (currentFontSize.value * 1.2f).sp, color = TextSecondary)
-                MathFormulaView(node.expr, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
-                Text(text = "]", fontSize = (currentFontSize.value * 1.2f).sp, color = TextSecondary)
-
-                if (node.atPoint != null) {
-                    Text(
-                        text = " |",
-                        fontSize = (currentFontSize.value * 1.3f).sp,
                         color = accentColor
                     )
+                }
+                Text(text = "[", fontSize = (fontSize.value * 1.2f).sp, color = textColor)
+                RenderMathNode(node.expr, fontSize, textColor, accentColor)
+                Text(text = "]", fontSize = (fontSize.value * 1.2f).sp, color = textColor)
+
+                if (node.atPoint != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.offset(y = 4.dp)
+                        modifier = Modifier.padding(start = 4.dp)
                     ) {
                         Text(
-                            text = "${node.variable}=",
-                            fontSize = (currentFontSize.value * 0.7f).sp,
-                            color = MathCyan
+                            text = "|",
+                            fontSize = (fontSize.value * 1.4f).sp,
+                            fontWeight = FontWeight.Light,
+                            color = accentColor
                         )
-                        MathFormulaView(
-                            node = node.atPoint,
-                            baseFontSize = (currentFontSize.value * 0.7f).sp,
-                            textColor = textColor,
-                            accentColor = accentColor
-                        )
+                        Column(modifier = Modifier.padding(start = 2.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "${node.variable} = ",
+                                    fontSize = (fontSize.value * 0.65f).sp,
+                                    color = textColor
+                                )
+                                RenderMathNode(
+                                    node = node.atPoint,
+                                    fontSize = (fontSize.value * 0.65f).sp,
+                                    textColor = textColor,
+                                    accentColor = accentColor
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
         is MathNode.Integral -> {
-            // Integral sign with bounds
-            Row(
-                modifier = modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Integral sign with bounds
+                Box(
+                    contentAlignment = Alignment.CenterStart,
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
                     Text(
                         text = "∫",
-                        fontSize = (currentFontSize.value * 1.9f).sp,
-                        color = PurplePrimary,
+                        fontSize = (fontSize.value * 1.8f).sp,
+                        fontWeight = FontWeight.Light,
                         fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Normal
+                        color = accentColor
                     )
-                    if (node.lowerBound != null || node.upperBound != null) {
-                        Column(
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.offset(x = (-4).dp)
+                    if (node.upperBound != null) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 12.dp, y = (-fontSize.value * 0.6f).dp)
                         ) {
-                            if (node.upperBound != null) {
-                                Box(modifier = Modifier.offset(y = (-4).dp)) {
-                                    MathFormulaView(
-                                        node = node.upperBound,
-                                        baseFontSize = (currentFontSize.value * 0.65f).sp,
-                                        textColor = accentColor,
-                                        accentColor = accentColor
-                                    )
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                            if (node.lowerBound != null) {
-                                Box(modifier = Modifier.offset(y = 4.dp)) {
-                                    MathFormulaView(
-                                        node = node.lowerBound,
-                                        baseFontSize = (currentFontSize.value * 0.65f).sp,
-                                        textColor = accentColor,
-                                        accentColor = accentColor
-                                    )
-                                }
-                            }
+                            RenderMathNode(
+                                node = node.upperBound,
+                                fontSize = (fontSize.value * 0.65f).sp,
+                                textColor = textColor,
+                                accentColor = accentColor
+                            )
+                        }
+                    }
+                    if (node.lowerBound != null) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 10.dp, y = (fontSize.value * 0.6f).dp)
+                        ) {
+                            RenderMathNode(
+                                node = node.lowerBound,
+                                fontSize = (fontSize.value * 0.65f).sp,
+                                textColor = textColor,
+                                accentColor = accentColor
+                            )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.width(4.dp))
-                MathFormulaView(node.integrand, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
-                Spacer(modifier = Modifier.width(4.dp))
+
+                Spacer(modifier = Modifier.width(6.dp))
+                RenderMathNode(node.integrand, fontSize, textColor, accentColor)
                 Text(
-                    text = "d${node.variable}",
-                    fontSize = currentFontSize,
+                    text = " d${node.variable}",
+                    fontSize = fontSize,
                     fontStyle = FontStyle.Italic,
                     fontFamily = FontFamily.Serif,
                     color = MathCyan
@@ -460,83 +439,74 @@ fun MathFormulaView(
             }
         }
         is MathNode.Sigma -> {
-            // Summation with bounds above and below
-            Row(
-                modifier = modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier.padding(end = 6.dp)
                 ) {
                     // Upper bound
-                    Box(modifier = Modifier.offset(y = 2.dp)) {
-                        MathFormulaView(
-                            node = node.upper,
-                            baseFontSize = (currentFontSize.value * 0.65f).sp,
-                            textColor = accentColor,
-                            accentColor = accentColor
-                        )
-                    }
+                    RenderMathNode(
+                        node = node.upper,
+                        fontSize = (fontSize.value * 0.65f).sp,
+                        textColor = textColor,
+                        accentColor = accentColor
+                    )
+                    // Sigma glyph
                     Text(
                         text = "∑",
-                        fontSize = (currentFontSize.value * 1.7f).sp,
-                        color = PurplePrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Serif
+                        fontSize = (fontSize.value * 1.7f).sp,
+                        fontWeight = FontWeight.Normal,
+                        fontFamily = FontFamily.Serif,
+                        color = accentColor
                     )
-                    // Lower bound (i = a)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.offset(y = (-2).dp)
-                    ) {
+                    // Lower bound
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "${node.indexVar}=",
-                            fontSize = (currentFontSize.value * 0.65f).sp,
-                            color = MathCyan
+                            fontSize = (fontSize.value * 0.6f).sp,
+                            color = textColor
                         )
-                        MathFormulaView(
+                        RenderMathNode(
                             node = node.lower,
-                            baseFontSize = (currentFontSize.value * 0.65f).sp,
+                            fontSize = (fontSize.value * 0.6f).sp,
                             textColor = textColor,
                             accentColor = accentColor
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(6.dp))
-                MathFormulaView(node.summand, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.summand, fontSize, textColor, accentColor)
             }
         }
         is MathNode.Matrix -> {
-            // Matrix bracketed 2D grid
             Row(
-                modifier = modifier.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 4.dp)
             ) {
+                // Left bracket
                 Text(
                     text = "[",
-                    fontSize = (currentFontSize.value * (1.1f + node.rows * 0.5f)).sp,
-                    color = PurplePrimary,
-                    fontWeight = FontWeight.Light
+                    fontSize = (fontSize.value * (node.rows * 0.9f + 0.6f)).sp,
+                    fontWeight = FontWeight.ExtraLight,
+                    color = accentColor
                 )
+                // Grid of values
                 Column(
-                    modifier = Modifier.padding(horizontal = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.padding(horizontal = 6.dp)
                 ) {
-                    node.values.forEach { rowCells ->
+                    for (row in node.values) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            rowCells.forEach { cell ->
+                            for (cell in row) {
                                 Box(
                                     modifier = Modifier.widthIn(min = 28.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    MathFormulaView(
+                                    RenderMathNode(
                                         node = cell,
-                                        baseFontSize = currentFontSize,
+                                        fontSize = (fontSize.value * 0.9f).sp,
                                         textColor = textColor,
                                         accentColor = accentColor
                                     )
@@ -545,46 +515,47 @@ fun MathFormulaView(
                         }
                     }
                 }
+                // Right bracket
                 Text(
                     text = "]",
-                    fontSize = (currentFontSize.value * (1.1f + node.rows * 0.5f)).sp,
-                    color = PurplePrimary,
-                    fontWeight = FontWeight.Light
+                    fontSize = (fontSize.value * (node.rows * 0.9f + 0.6f)).sp,
+                    fontWeight = FontWeight.ExtraLight,
+                    color = accentColor
                 )
             }
         }
         is MathNode.Group -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "(", fontSize = (currentFontSize.value * 1.1f).sp, color = TextSecondary)
-                MathFormulaView(node.inner, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
-                Text(text = ")", fontSize = (currentFontSize.value * 1.1f).sp, color = TextSecondary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "(",
+                    fontSize = (fontSize.value * 1.15f).sp,
+                    color = textColor
+                )
+                RenderMathNode(node.inner, fontSize, textColor, accentColor)
+                Text(
+                    text = ")",
+                    fontSize = (fontSize.value * 1.15f).sp,
+                    color = textColor
+                )
             }
         }
         is MathNode.Equation -> {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MathFormulaView(node.left, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RenderMathNode(node.left, fontSize, textColor, accentColor)
                 Text(
                     text = " = ",
-                    fontSize = currentFontSize,
-                    color = MathPink,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = MathGreen
                 )
-                MathFormulaView(node.right, baseFontSize = currentFontSize, textColor = textColor, accentColor = accentColor)
+                RenderMathNode(node.right, fontSize, textColor, accentColor)
             }
         }
         is MathNode.TextNode -> {
             Text(
                 text = node.text,
-                fontSize = currentFontSize,
-                color = textColor,
-                fontFamily = FontFamily.Serif,
-                modifier = modifier
+                fontSize = fontSize,
+                color = textColor
             )
         }
     }

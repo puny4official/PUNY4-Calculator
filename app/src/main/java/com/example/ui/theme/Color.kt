@@ -63,7 +63,7 @@ val PurpleTertiary = Color(0xFF8B5CF6)       // Royal Purple
 val PurpleAccent = Color(0xFFD8B4FE)         // Bright Lilac
 
 // Status & Special Colors
-val MathGreen = Color(0xFF10B981)            // Green live answer (User requested: "رنگ جواب رو سبز کن")
+val MathGreen = Color(0xFF10B981)            // Vibrant Green Answer
 val MathAmber = Color(0xFFF59E0B)            // Approximate / warning
 val MathCyan = Color(0xFF06B6D4)             // Variables / symbols
 val MathPink = Color(0xFFEC4899)             // Functions / operators

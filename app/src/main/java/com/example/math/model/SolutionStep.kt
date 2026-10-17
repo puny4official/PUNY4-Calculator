@@ -5,15 +5,15 @@ data class SolutionStep(
     val titleFa: String,
     val formula: MathNode,
     val explanationFa: String,
-    val tag: String = "مرحله" // e.g. "فرمول اولیه", "تبدیل جبری", "قاعده مشتق", "نتیجه نهایی"
+    val tag: String = "مرحله" // e.g. "فرمول اولیه", "تبدیل جبری", "محاسبه عددی", "پاسخ نهایی"
 )
 
 data class MathSolutionResult(
     val problemTitleFa: String,
-    val originalFormula: MathNode,
+    val initialFormula: MathNode,
     val steps: List<SolutionStep>,
     val exactResult: MathNode,
-    val approxResult: String? = null,
+    val approximateResult: String? = null,
     val isExact: Boolean = true,
-    val domainNotesFa: String? = null
+    val categoryFa: String = "عمومی"
 )

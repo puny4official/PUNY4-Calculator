@@ -1,6 +1,5 @@
 package com.example.math.util
 
-import java.math.BigDecimal
 import java.math.BigInteger
 
 object PersianNumberWords {
@@ -19,7 +18,8 @@ object PersianNumberWords {
     )
 
     private val scales = arrayOf(
-        "", "هزار", "میلیون", "میلیارد", "تریلیون", "کوآدریلیون", "کوینتیلیون"
+        "", "هزار", "میلیون", "میلیارد", "تریلیون", "کوآدریلیون", "کوینتیلیون", "سکستیلیون", "سپتیلیون", "اکتیلیون", "نونیلیون", "دسیلیون",
+        "آندسیلیون", "دودسیلیون", "تریدسیلیون", "کوآتوردسیلیون", "کویندسیلیون"
     )
 
     fun convert(numberStr: String): String {
