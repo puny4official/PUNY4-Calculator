@@ -16,8 +16,8 @@ android {
     applicationId = "com.puny4.calculator"
     minSdk = 24
     targetSdk = 36
-    versionCode = (findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
-    versionName = (findProperty("versionName") as String?) ?: "1.0"
+    versionCode = 1
+    versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

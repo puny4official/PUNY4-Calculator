@@ -1,5 +1,5 @@
 
-name: Build PUNY4 Calculator APK
+name: Build PUNY4 Calculator Release APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -42,30 +42,51 @@ jobs:
 
           gradle --version
 
-      - name: Create debug keystore
+      - name: Prepare signing keystore
         shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD_SECRET: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD_SECRET: ${{ secrets.KEY_PASSWORD }}
         run: |
-          keytool -genkeypair \
-            -v \
-            -keystore "$GITHUB_WORKSPACE/debug.keystore" \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          KEYSTORE="$RUNNER_TEMP/release.jks"
 
-      - name: Build Debug APK
+          if [[ -n "$KEYSTORE_BASE64" && -n "$STORE_PASSWORD_SECRET" && -n "$KEY_PASSWORD_SECRET" ]]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
+            STORE_PASSWORD="$STORE_PASSWORD_SECRET"
+            KEY_PASSWORD="$KEY_PASSWORD_SECRET"
+          else
+            echo "::warning::Signing secrets (KEYSTORE_BASE64, STORE_PASSWORD, KEY_PASSWORD) are not set. Using a temporary key; this APK cannot update an install signed with a different key."
+            STORE_PASSWORD="$(openssl rand -hex 16)"
+            KEY_PASSWORD="$STORE_PASSWORD"
+            keytool -genkeypair \
+              -keystore "$KEYSTORE" \
+              -storepass "$STORE_PASSWORD" \
+              -alias upload \
+              -keypass "$KEY_PASSWORD" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=PUNY4 Calculator,O=PUNY4,C=US"
+          fi
+
+          echo "::add-mask::$STORE_PASSWORD"
+          echo "::add-mask::$KEY_PASSWORD"
+          {
+            echo "KEYSTORE_PATH=$KEYSTORE"
+            echo "STORE_PASSWORD=$STORE_PASSWORD"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: Build Release APK
         shell: bash
         run: |
-          gradle --no-daemon assembleDebug
+          gradle --no-daemon assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PUNY4-Calculator-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: PUNY4-Calculator-release-apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
-          
