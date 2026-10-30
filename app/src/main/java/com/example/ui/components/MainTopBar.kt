@@ -136,6 +136,7 @@ fun HamburgerSideSheet(
                     ) {
                         // Prevent dismiss when tapping inside sheet
                     }
+                    .windowInsetsPadding(WindowInsets.systemBars)
                     .padding(horizontal = 16.dp, vertical = 20.dp)
             ) {
                 Column(
