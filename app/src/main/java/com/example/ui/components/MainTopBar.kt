@@ -35,62 +35,42 @@ fun MainTopBar(
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
 
     TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
-                        .border(
-                            1.dp,
-                            if (isDark) AmoledPillBadgeBorder else LightPillBadgeBorder,
-                            RoundedCornerShape(10.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+        title = {},
+        navigationIcon = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // History Button
+                IconButton(
+                    onClick = { viewModel.setHistoryOpen(true) },
+                    modifier = Modifier.testTag("top_bar_history_button")
                 ) {
-                    Text(
-                        text = "PUNY4",
-                        color = PurplePrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "تاریخچه",
+                        tint = PurpleSecondary
                     )
                 }
 
-                Text(
-                    text = "PUNY4 Calculator",
-                    color = if (isDark) TextPrimary else LightTextPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                // Scope Button
+                IconButton(
+                    onClick = { viewModel.setScopeOpen(true) },
+                    modifier = Modifier.testTag("top_bar_scope_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "دامنه و راهنما",
+                        tint = PurpleSecondary
+                    )
+                }
             }
         },
         actions = {
-            // History Button
-            IconButton(
-                onClick = { viewModel.setHistoryOpen(true) },
-                modifier = Modifier.testTag("top_bar_history_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = "تاریخچه",
-                    tint = PurpleSecondary
-                )
-            }
-
-            // Scope Button
-            IconButton(
-                onClick = { viewModel.setScopeOpen(true) },
-                modifier = Modifier.testTag("top_bar_scope_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "دامنه و راهنما",
-                    tint = PurpleSecondary
-                )
-            }
+            // App name next to the hamburger menu
+            Text(
+                text = "PUNY4 Calculator",
+                color = if (isDark) TextPrimary else LightTextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
 
             // Hamburger Menu Button (Top Right)
             IconButton(
