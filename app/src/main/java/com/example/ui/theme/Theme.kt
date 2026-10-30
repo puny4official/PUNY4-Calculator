@@ -67,14 +67,18 @@ fun Puny4Theme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as? Activity)?.window
-            if (window != null) {
-                val statusBarColor = if (isDark) AmoledBackground.toArgb() else LightBackground.toArgb()
-                window.statusBarColor = statusBarColor
-                window.navigationBarColor = statusBarColor
-                val insetsController = WindowCompat.getInsetsController(window, view)
-                insetsController.isAppearanceLightStatusBars = !isDark
-                insetsController.isAppearanceLightNavigationBars = !isDark
+            try {
+                val window = (view.context as? Activity)?.window
+                if (window != null) {
+                    val statusBarColor = if (isDark) AmoledBackground.toArgb() else LightBackground.toArgb()
+                    window.statusBarColor = statusBarColor
+                    window.navigationBarColor = statusBarColor
+                    val insetsController = WindowCompat.getInsetsController(window, view)
+                    insetsController.isAppearanceLightStatusBars = !isDark
+                    insetsController.isAppearanceLightNavigationBars = !isDark
+                }
+            } catch (_: Throwable) {
+                // Ignore any OEM window manager exception on custom ROMs
             }
         }
     }

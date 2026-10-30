@@ -565,7 +565,7 @@ fun IntegralInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
         }
 
         SolveButton(title = "محاسبه انتگرال با پادمشتق") {
-            viewModel.solvePolynomialIntegral(
+            viewModel.solveStudioIntegral(
                 a = a.toDoubleOrNull() ?: 1.0,
                 n = n.toDoubleOrNull() ?: 1.0,
                 b = b.toDoubleOrNull() ?: 0.0,
