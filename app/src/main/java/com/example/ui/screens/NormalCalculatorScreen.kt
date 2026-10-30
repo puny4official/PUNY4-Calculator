@@ -77,61 +77,9 @@ fun NormalCalculatorScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.End
             ) {
-                // Top status badges (DEG/RAD, 36-digits, Scientific toggle)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // DEG / RAD Pill
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
-                                .clickable { viewModel.toggleAngleMode() }
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = if (angleMode == ScientificEngine.AngleMode.DEGREE) "DEG" else "RAD",
-                                color = PurplePrimary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // 36 Digits badge
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isDark) AmoledPillBadgeBg else LightPillBadgeBg)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "دقت ۳۶ رقم",
-                                color = PurpleSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // Scientific toggle button
-                    IconButton(
-                        onClick = { viewModel.toggleScientificExpanded() },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isScientificExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = "توابع علمی",
-                            tint = PurplePrimary
-                        )
-                    }
-                }
-
                 // Middle & Bottom: Expression, Result, and Persian Words
                 Column(
                     modifier = Modifier.fillMaxWidth(),
