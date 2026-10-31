@@ -154,7 +154,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
             val clean = result.replace(",", "")
             _expression.value =
                 if (clean.startsWith("-") || clean.startsWith("−")) clean.substring(1)
-                else "−$clean"
+                else "-$clean"
             _displayedResult.value = null
             _resultWordsFa.value = null
             _isResultError.value = false
@@ -164,20 +164,20 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
         val cur = _expression.value
         if (cur == "0") {
-            _expression.value = "−"
+            _expression.value = "-"
             return
         }
-        if (cur == "−") {
+        if (cur == "-") {
             _expression.value = "0"
             return
         }
 
-        // Unwrap an already negative last number: (−5) -> 5, or a leading −5 -> 5
-        Regex("\\(−([0-9.]+)\\)$").find(cur)?.let { m ->
+        // Unwrap an already negative last number: (-5) -> 5, or a leading -5 -> 5
+        Regex("\\([-−]([0-9.]+)\\)$").find(cur)?.let { m ->
             _expression.value = cur.substring(0, m.range.first) + m.groupValues[1]
             return
         }
-        Regex("^−([0-9.]+)$").find(cur)?.let { m ->
+        Regex("^[-−]([0-9.]+)$").find(cur)?.let { m ->
             _expression.value = m.groupValues[1]
             return
         }
@@ -186,7 +186,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         val m = Regex("[0-9.]+$").find(cur) ?: return
         val number = m.value
         val prefix = cur.substring(0, m.range.first)
-        _expression.value = if (prefix.isEmpty()) "−$number" else "$prefix(−$number)"
+        _expression.value = if (prefix.isEmpty()) "-$number" else "$prefix(-$number)"
     }
 
     fun onBackspace() {
