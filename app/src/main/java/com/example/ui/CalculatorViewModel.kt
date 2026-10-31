@@ -203,6 +203,17 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /**
+     * Goes back to editing the question after "=" was pressed:
+     * hides the result and keeps the expression as it is.
+     */
+    fun onReturnToExpression() {
+        if (_displayedResult.value == null) return
+        _displayedResult.value = null
+        _resultWordsFa.value = null
+        _isResultError.value = false
+    }
+
     fun onClear() {
         _expression.value = "0"
         _displayedResult.value = null

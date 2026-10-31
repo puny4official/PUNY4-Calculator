@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -208,6 +209,36 @@ fun NormalCalculatorScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Return to the question after "=" so it can be edited again
+            Button(
+                onClick = { viewModel.onReturnToExpression() },
+                enabled = displayedResult != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .testTag("key_return_to_expression"),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = keyOperatorBg,
+                    contentColor = keyOperatorText,
+                    disabledContainerColor = keyOperatorBg.copy(alpha = 0.4f),
+                    disabledContentColor = keyOperatorText.copy(alpha = 0.4f)
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "برگشت به روی سوال",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             // Row 1: AC, Backspace, ( ), ÷
             Row(
                 modifier = Modifier.fillMaxWidth(),
