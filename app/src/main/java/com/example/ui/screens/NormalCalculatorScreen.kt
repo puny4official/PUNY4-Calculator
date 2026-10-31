@@ -18,6 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -201,21 +205,14 @@ fun NormalCalculatorScreen(
                     contentColor = keyClearText,
                     onClick = { viewModel.onBackspace() }
                 )
-                CalcButton(
-                    text = "( )",
+                CalcIconButton(
+                    icon = PlusMinusIcon,
                     modifier = Modifier.weight(1f),
                     containerColor = keyOperatorBg,
                     contentColor = keyOperatorText,
-                    onClick = {
-                        val expr = expression
-                        val opens = expr.count { it == '(' }
-                        val closes = expr.count { it == ')' }
-                        if (opens > closes && expr.lastOrNull() !in listOf('+', '−', '-', '×', '*', '÷', '/', '(')) {
-                            viewModel.onInput(")")
-                        } else {
-                            viewModel.onInput("(")
-                        }
-                    }
+                    testTag = "key_toggle_sign",
+                    contentDescription = "تغییر علامت",
+                    onClick = { viewModel.onToggleSign() }
                 )
                 CalcButton(
                     text = "÷",
@@ -415,13 +412,15 @@ fun CalcIconButton(
     modifier: Modifier = Modifier,
     containerColor: Color,
     contentColor: Color,
+    testTag: String = "key_backspace",
+    contentDescription: String = "حذف",
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .height(58.dp)
-            .testTag("key_backspace"),
+            .testTag(testTag),
         shape = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -431,7 +430,7 @@ fun CalcIconButton(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = "حذف",
+            contentDescription = contentDescription,
             tint = contentColor,
             modifier = Modifier.size(24.dp)
         )
@@ -466,3 +465,26 @@ fun CalcMiniButton(
         )
     }
 }
+
+/** "+/−" sign toggle icon: plus (top-left), minus (bottom-right) and a diagonal slash. */
+private val PlusMinusIcon: ImageVector = ImageVector.Builder(
+    name = "PlusMinus",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f
+).apply {
+    path(
+        stroke = SolidColor(Color.Black),
+        strokeLineWidth = 2f,
+        strokeLineCap = StrokeCap.Round
+    ) {
+        // plus
+        moveTo(3.5f, 7f); lineTo(10.5f, 7f)
+        moveTo(7f, 3.5f); lineTo(7f, 10.5f)
+        // slash
+        moveTo(17f, 3.5f); lineTo(8f, 20.5f)
+        // minus
+        moveTo(13.5f, 18f); lineTo(20.5f, 18f)
+    }
+}.build()
