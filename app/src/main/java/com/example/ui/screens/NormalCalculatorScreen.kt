@@ -100,73 +100,85 @@ fun NormalCalculatorScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.End
             ) {
-                // Middle & Bottom: Expression, Result, and Persian Words
-                Column(
+                val hasResult = displayedResult != null
+
+                // Question: sits at the bottom while typing. After "=" it moves to the top
+                // of the card and stays visible, faded, while the answer is shown below.
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState(), reverseScrolling = true),
-                    horizontalAlignment = Alignment.End
+                        .weight(1f),
+                    contentAlignment = if (hasResult) Alignment.TopEnd else Alignment.BottomEnd
                 ) {
-                    // Expression: font shrinks as digits increase so it always fits the card width
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(
+                                rememberScrollState(),
+                                reverseScrolling = !hasResult
+                            ),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        // Font shrinks as digits increase so it always fits the card width
+                        AutoSizeText(
+                            text = formatExpressionWithCommas(expression),
+                            color = if (hasResult) secondaryText.copy(alpha = 0.55f) else primaryText,
+                            maxFontSize = 38.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            testTag = "expression_text",
+                            onLongPress = { copyToClipboard(expression) }
+                        )
+                    }
+                }
+
+                // Answer (only after "="), always at the bottom of the card
+                if (hasResult) {
+                    val resultText = displayedResult!!
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     AutoSizeText(
-                        text = formatExpressionWithCommas(expression),
-                        color = if (displayedResult != null) secondaryText else primaryText,
-                        maxFontSize = 38.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        testTag = "expression_text",
-                        onLongPress = { copyToClipboard(expression) }
+                        text = if (isResultError) resultText else "= $resultText",
+                        color = if (isResultError) Color(0xFFEF4444) else MathGreen, // VIBRANT GREEN
+                        maxFontSize = 44.sp,
+                        fontWeight = FontWeight.Bold,
+                        testTag = "result_text",
+                        referenceText = "= 100,000,000,000,000",
+                        onLongPress = if (isResultError) null else {
+                            { copyToClipboard(resultText.replace(",", "")) }
+                        }
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Result: ONLY displayed when '=' has been pressed!
-                    if (displayedResult != null) {
-                        val resultText = displayedResult!!
-
-                        AutoSizeText(
-                            text = if (isResultError) resultText else "= $resultText",
-                            color = if (isResultError) Color(0xFFEF4444) else MathGreen, // VIBRANT GREEN
-                            maxFontSize = 44.sp,
-                            fontWeight = FontWeight.Bold,
-                            testTag = "result_text",
-                            referenceText = "= 100,000,000,000,000",
-                            onLongPress = if (isResultError) null else {
-                                { copyToClipboard(resultText.replace(",", "")) }
-                            }
-                        )
-
-                        // Persian Words beneath the result (Made LARGER per request!)
-                        if (resultWordsFa != null) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isDark) AmoledPillBadgeBg else LightPillBadgeBg
-                                ),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    if (isDark) AmoledPillBadgeBorder else LightPillBadgeBorder
-                                ),
+                    // Persian words beneath the answer
+                    if (resultWordsFa != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isDark) AmoledPillBadgeBg else LightPillBadgeBg
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isDark) AmoledPillBadgeBorder else LightPillBadgeBorder
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = resultWordsFa!!,
+                                color = if (isDark) Color.White else Color.Black,
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 27.sp,
+                                textAlign = TextAlign.Right,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 2.dp)
-                            ) {
-                                Text(
-                                    text = resultWordsFa!!,
-                                    color = if (isDark) Color.White else Color.Black,
-                                    fontSize = 19.sp, // LARGER PER REQUEST
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 27.sp,
-                                    textAlign = TextAlign.Right,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                                        .testTag("persian_words_text")
-                                )
-                            }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .testTag("persian_words_text")
+                            )
                         }
                     }
                 }
