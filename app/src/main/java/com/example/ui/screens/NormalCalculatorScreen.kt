@@ -115,7 +115,8 @@ fun NormalCalculatorScreen(
                             color = if (isResultError) Color(0xFFEF4444) else MathGreen, // VIBRANT GREEN
                             maxFontSize = 44.sp,
                             fontWeight = FontWeight.Bold,
-                            testTag = "result_text"
+                            testTag = "result_text",
+                            referenceText = "= 100,000,000,000,000"
                         )
 
                         // Persian Words beneath the result (Made LARGER per request!)
@@ -280,9 +281,10 @@ fun NormalCalculatorScreen(
 }
 
 /**
- * Monospace text whose font size shrinks (1sp at a time) until it fits the available width,
- * but never below [minFontSize]. Once it would have to go below the minimum, the font size
- * stays at the minimum and the text wraps onto additional lines instead.
+ * Monospace text whose font size shrinks (1sp at a time) until it fits the available width.
+ * The smallest size it may shrink to is the size at which [referenceText] (15 digits) just
+ * fits the width. Once the text would need to go below that size, the font size stays there
+ * and the text wraps onto additional lines instead.
  */
 @Composable
 private fun AutoSizeText(
@@ -291,7 +293,7 @@ private fun AutoSizeText(
     maxFontSize: TextUnit,
     fontWeight: FontWeight,
     testTag: String,
-    minFontSize: TextUnit = 30.sp
+    referenceText: String = "100,000,000,000,000"
 ) {
     val measurer = rememberTextMeasurer()
 
@@ -299,23 +301,29 @@ private fun AutoSizeText(
         val availableWidth = constraints.maxWidth
 
         // Pair of (font size, needs wrapping)
-        val layoutChoice = remember(text, availableWidth, maxFontSize, minFontSize, fontWeight) {
-            val minSize = minFontSize.value
-            var size = maxOf(maxFontSize.value, minSize)
+        val layoutChoice = remember(text, availableWidth, maxFontSize, referenceText, fontWeight) {
+            fun widthAt(value: String, fontSizeSp: Float): Int = measurer.measure(
+                text = value,
+                style = TextStyle(
+                    fontSize = fontSizeSp.sp,
+                    fontWeight = fontWeight,
+                    fontFamily = FontFamily.Monospace
+                ),
+                softWrap = false,
+                maxLines = 1,
+                constraints = Constraints()
+            ).size.width
+
+            // Minimum size: where the reference number just fits the width
+            var minSize = maxFontSize.value
+            while (minSize > 8f && widthAt(referenceText, minSize) > availableWidth) {
+                minSize -= 1f
+            }
+
+            var size = maxFontSize.value
             var fits = false
             while (true) {
-                val measuredWidth = measurer.measure(
-                    text = text,
-                    style = TextStyle(
-                        fontSize = size.sp,
-                        fontWeight = fontWeight,
-                        fontFamily = FontFamily.Monospace
-                    ),
-                    softWrap = false,
-                    maxLines = 1,
-                    constraints = Constraints()
-                ).size.width
-                if (measuredWidth <= availableWidth) {
+                if (widthAt(text, size) <= availableWidth) {
                     fits = true
                     break
                 }
