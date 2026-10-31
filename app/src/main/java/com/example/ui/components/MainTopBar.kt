@@ -18,8 +18,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.BuildConfig
 import com.example.ui.ActiveScreen
 import com.example.ui.CalculatorViewModel
 import com.example.ui.theme.*
@@ -267,54 +269,23 @@ fun HamburgerSideSheet(
                         )
                     }
 
-                    // BOTTOM SECTION: Quick Actions
+                    // BOTTOM SECTION: App version
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Divider(color = if (isDark) BlackBorder else LightBorder)
 
-                        Row(
+                        Text(
+                            text = "نسخه ${BuildConfig.VERSION_NAME}",
+                            color = if (isDark) TextSecondary else LightTextSecondary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.setDrawerOpen(false)
-                                    viewModel.setHistoryOpen(true)
-                                }
-                                .padding(vertical = 8.dp, horizontal = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(Icons.Default.History, contentDescription = null, tint = PurpleSecondary, modifier = Modifier.size(20.dp))
-                            Text(
-                                text = "تاریخچه",
-                                color = if (isDark) TextSecondary else LightTextSecondary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.setDrawerOpen(false)
-                                    viewModel.setScopeOpen(true)
-                                }
-                                .padding(vertical = 8.dp, horizontal = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(Icons.Default.Info, contentDescription = null, tint = PurpleSecondary, modifier = Modifier.size(20.dp))
-                            Text(
-                                text = "درباره و دامنه ریاضی",
-                                color = if (isDark) TextSecondary else LightTextSecondary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                                .padding(vertical = 8.dp)
+                        )
                     }
                 }
             }
