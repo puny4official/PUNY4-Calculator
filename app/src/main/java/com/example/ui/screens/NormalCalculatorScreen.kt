@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -329,6 +330,7 @@ private fun AutoSizeText(
                 fontWeight = fontWeight,
                 fontFamily = FontFamily.Monospace,
                 textAlign = TextAlign.End,
+                style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
                 maxLines = 1,
                 softWrap = false,
                 modifier = Modifier.testTag(testTag)
