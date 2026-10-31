@@ -61,6 +61,67 @@ fun MainTopBar(
                         tint = PurpleSecondary
                     )
                 }
+
+                // Theme (Appearance) Button
+                var themeMenuOpen by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(
+                        onClick = { themeMenuOpen = true },
+                        modifier = Modifier.testTag("top_bar_theme_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = "ظاهر",
+                            tint = PurpleSecondary
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = themeMenuOpen,
+                        onDismissRequest = { themeMenuOpen = false },
+                        modifier = Modifier.background(if (isDark) AmoledDisplaySurface else LightDisplaySurface)
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "لایت مود",
+                                    color = if (isDark) TextPrimary else LightTextPrimary
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.LightMode, contentDescription = null, tint = PurpleSecondary)
+                            },
+                            trailingIcon = {
+                                if (themeMode == AppThemeMode.LIGHT) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+                                }
+                            },
+                            onClick = {
+                                viewModel.setThemeMode(AppThemeMode.LIGHT)
+                                themeMenuOpen = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "دارک مود امولد",
+                                    color = if (isDark) TextPrimary else LightTextPrimary
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.DarkMode, contentDescription = null, tint = PurpleSecondary)
+                            },
+                            trailingIcon = {
+                                if (themeMode == AppThemeMode.AMOLED_DARK) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+                                }
+                            },
+                            onClick = {
+                                viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
+                                themeMenuOpen = false
+                            }
+                        )
+                    }
+                }
             }
         },
         actions = {
@@ -204,40 +265,6 @@ fun HamburgerSideSheet(
                                 viewModel.setScreen(ActiveScreen.STUDIO)
                             }
                         )
-
-                        Divider(color = if (isDark) BlackBorder else LightBorder)
-
-                        // APPEARANCE SECTION ("به بخش همبرگری یه بخش ظاهر بیار و داخلش صفحه دارک مود امولد باشه و لایت مود که اپ خودکار روی لایت مود باشه")
-                        Text(
-                            text = "ظاهر",
-                            color = if (isDark) PurpleAccent else PurpleTertiary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        // Option A: لایت مود (Light Mode - default)
-                        DrawerThemeItem(
-                            title = "لایت مود",
-                            subtitle = "حالت پیش‌فرض روشن",
-                            icon = Icons.Default.LightMode,
-                            isSelected = themeMode == AppThemeMode.LIGHT,
-                            isDark = isDark,
-                            onClick = {
-                                viewModel.setThemeMode(AppThemeMode.LIGHT)
-                            }
-                        )
-
-                        // Option B: دارک مود امولد (AMOLED Dark Mode)
-                        DrawerThemeItem(
-                            title = "دارک مود امولد",
-                            subtitle = "مشکی خالص و بنفش",
-                            icon = Icons.Default.DarkMode,
-                            isSelected = themeMode == AppThemeMode.AMOLED_DARK,
-                            isDark = isDark,
-                            onClick = {
-                                viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
-                            }
-                        )
                     }
 
                     // BOTTOM SECTION: Quick Actions
@@ -328,58 +355,5 @@ fun DrawerMenuItem(
             fontSize = 13.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
-    }
-}
-
-@Composable
-fun DrawerThemeItem(
-    title: String,
-    subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isSelected: Boolean,
-    isDark: Boolean,
-    onClick: () -> Unit
-) {
-    val borderCol = if (isSelected) PurplePrimary else (if (isDark) BlackBorder else LightBorder)
-    val itemBg = if (isSelected) (if (isDark) AmoledPillBadgeBg else LightPillBadgeBg) else Color.Transparent
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(itemBg)
-            .border(1.dp, borderCol, RoundedCornerShape(14.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isSelected) PurplePrimary else (if (isDark) TextSecondary else LightTextSecondary),
-            modifier = Modifier.size(20.dp)
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                color = if (isDark) TextPrimary else LightTextPrimary,
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-            )
-            Text(
-                text = subtitle,
-                color = if (isDark) TextMuted else LightTextMuted,
-                fontSize = 10.5.sp
-            )
-        }
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "انتخاب شده",
-                tint = PurplePrimary,
-                modifier = Modifier.size(16.dp)
-            )
-        }
     }
 }
