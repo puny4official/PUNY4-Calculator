@@ -3,11 +3,11 @@ package com.example.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -90,7 +90,9 @@ fun NormalCalculatorScreen(
             ) {
                 // Middle & Bottom: Expression, Result, and Persian Words
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState(), reverseScrolling = true),
                     horizontalAlignment = Alignment.End
                 ) {
                     // Expression: font shrinks as digits increase so it always fits the card width
@@ -278,9 +280,9 @@ fun NormalCalculatorScreen(
 }
 
 /**
- * Single-line monospace text whose font size shrinks (1sp at a time, down to [minFontSize])
- * until it fits the available width. If it still does not fit at the minimum size,
- * it stays scrollable so nothing is cut off.
+ * Monospace text whose font size shrinks (1sp at a time) until it fits the available width,
+ * but never below [minFontSize]. Once it would have to go below the minimum, the font size
+ * stays at the minimum and the text wraps onto additional lines instead.
  */
 @Composable
 private fun AutoSizeText(
@@ -289,17 +291,19 @@ private fun AutoSizeText(
     maxFontSize: TextUnit,
     fontWeight: FontWeight,
     testTag: String,
-    minFontSize: TextUnit = 12.sp
+    minFontSize: TextUnit = 30.sp
 ) {
     val measurer = rememberTextMeasurer()
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val availableWidth = constraints.maxWidth
 
-        val fontSize = remember(text, availableWidth, maxFontSize, minFontSize, fontWeight) {
-            var size = maxFontSize.value
+        // Pair of (font size, needs wrapping)
+        val layoutChoice = remember(text, availableWidth, maxFontSize, minFontSize, fontWeight) {
             val minSize = minFontSize.value
-            while (size > minSize) {
+            var size = maxOf(maxFontSize.value, minSize)
+            var fits = false
+            while (true) {
                 val measuredWidth = measurer.measure(
                     text = text,
                     style = TextStyle(
@@ -311,31 +315,32 @@ private fun AutoSizeText(
                     maxLines = 1,
                     constraints = Constraints()
                 ).size.width
-                if (measuredWidth <= availableWidth) break
-                size -= 1f
+                if (measuredWidth <= availableWidth) {
+                    fits = true
+                    break
+                }
+                if (size <= minSize) break
+                size = maxOf(size - 1f, minSize)
             }
-            size.sp
+            size.sp to !fits
         }
+        val fontSize = layoutChoice.first
+        val needsWrap = layoutChoice.second
 
-        Box(
+        Text(
+            text = text,
+            color = color,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            fontFamily = FontFamily.Monospace,
+            textAlign = TextAlign.End,
+            style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
+            maxLines = if (needsWrap) Int.MAX_VALUE else 1,
+            softWrap = needsWrap,
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState(), reverseScrolling = true),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Text(
-                text = text,
-                color = color,
-                fontSize = fontSize,
-                fontWeight = fontWeight,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.End,
-                style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
-                maxLines = 1,
-                softWrap = false,
-                modifier = Modifier.testTag(testTag)
-            )
-        }
+                .testTag(testTag)
+        )
     }
 }
 
