@@ -1,8 +1,10 @@
 package com.example.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,7 +24,11 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +49,14 @@ fun NormalCalculatorScreen(
     modifier: Modifier = Modifier
 ) {
     val expression by viewModel.expression.collectAsState()
+
+    // Long-press on the expression or result copies it to the clipboard
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard: (String) -> Unit = { value ->
+        clipboardManager.setText(AnnotatedString(value))
+        Toast.makeText(context, "کپی شد: $value", Toast.LENGTH_SHORT).show()
+    }
     val displayedResult by viewModel.displayedResult.collectAsState()
     val resultWordsFa by viewModel.resultWordsFa.collectAsState()
     val isResultError by viewModel.isResultError.collectAsState()
@@ -101,7 +115,8 @@ fun NormalCalculatorScreen(
                         color = if (displayedResult != null) secondaryText else primaryText,
                         maxFontSize = 38.sp,
                         fontWeight = FontWeight.SemiBold,
-                        testTag = "expression_text"
+                        testTag = "expression_text",
+                        onLongPress = { copyToClipboard(expression) }
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -116,7 +131,10 @@ fun NormalCalculatorScreen(
                             maxFontSize = 44.sp,
                             fontWeight = FontWeight.Bold,
                             testTag = "result_text",
-                            referenceText = "= 100,000,000,000,000"
+                            referenceText = "= 100,000,000,000,000",
+                            onLongPress = if (isResultError) null else {
+                                { copyToClipboard(resultText.replace(",", "")) }
+                            }
                         )
 
                         // Persian Words beneath the result (Made LARGER per request!)
@@ -293,7 +311,8 @@ private fun AutoSizeText(
     maxFontSize: TextUnit,
     fontWeight: FontWeight,
     testTag: String,
-    referenceText: String = "100,000,000,000,000"
+    referenceText: String = "100,000,000,000,000",
+    onLongPress: (() -> Unit)? = null
 ) {
     val measurer = rememberTextMeasurer()
 
@@ -347,6 +366,15 @@ private fun AutoSizeText(
             softWrap = needsWrap,
             modifier = Modifier
                 .fillMaxWidth()
+                .then(
+                    if (onLongPress != null) {
+                        Modifier.pointerInput(text) {
+                            detectTapGestures(onLongPress = { onLongPress() })
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
                 .testTag(testTag)
         )
     }
