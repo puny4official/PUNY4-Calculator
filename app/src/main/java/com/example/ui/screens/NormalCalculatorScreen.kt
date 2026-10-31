@@ -197,8 +197,8 @@ fun NormalCalculatorScreen(
                 CalcIconButton(
                     icon = Icons.Default.Backspace,
                     modifier = Modifier.weight(1f),
-                    containerColor = keyOperatorBg,
-                    contentColor = keyOperatorText,
+                    containerColor = keyClearBg,
+                    contentColor = keyClearText,
                     onClick = { viewModel.onBackspace() }
                 )
                 CalcButton(
