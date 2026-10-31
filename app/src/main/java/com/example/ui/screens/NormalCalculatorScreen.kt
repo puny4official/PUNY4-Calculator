@@ -19,9 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,50 +88,28 @@ fun NormalCalculatorScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.End
                 ) {
-                    // Expression: Starts large, automatically shrinks as digits increase so it never overflows
-                    val exprFontSize = calculateExpressionFontSize(expression.length)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState(), reverseScrolling = true),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        Text(
-                            text = formatExpressionWithCommas(expression),
-                            color = if (displayedResult != null) secondaryText else primaryText,
-                            fontSize = exprFontSize,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Monospace,
-                            textAlign = TextAlign.End,
-                            maxLines = 1,
-                            modifier = Modifier.testTag("expression_text")
-                        )
-                    }
+                    // Expression: font shrinks as digits increase so it always fits the card width
+                    AutoSizeText(
+                        text = formatExpressionWithCommas(expression),
+                        color = if (displayedResult != null) secondaryText else primaryText,
+                        maxFontSize = 38.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        testTag = "expression_text"
+                    )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Result: ONLY displayed when '=' has been pressed!
                     if (displayedResult != null) {
                         val resultText = displayedResult!!
-                        val resultFontSize = calculateResultFontSize(resultText.length)
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState(), reverseScrolling = true),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            Text(
-                                text = if (isResultError) resultText else "= $resultText",
-                                color = if (isResultError) Color(0xFFEF4444) else MathGreen, // VIBRANT GREEN
-                                fontSize = resultFontSize,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                textAlign = TextAlign.End,
-                                maxLines = 1,
-                                modifier = Modifier.testTag("result_text")
-                            )
-                        }
+                        AutoSizeText(
+                            text = if (isResultError) resultText else "= $resultText",
+                            color = if (isResultError) Color(0xFFEF4444) else MathGreen, // VIBRANT GREEN
+                            maxFontSize = 44.sp,
+                            fontWeight = FontWeight.Bold,
+                            testTag = "result_text"
+                        )
 
                         // Persian Words beneath the result (Made LARGER per request!)
                         if (resultWordsFa != null) {
@@ -299,32 +280,63 @@ fun NormalCalculatorScreen(
 }
 
 /**
- * Calculates adaptive font size for expression:
- * Starts large at 38sp and shrinks gradually down to 18sp as digits increase
+ * Single-line monospace text whose font size shrinks (1sp at a time, down to [minFontSize])
+ * until it fits the available width. If it still does not fit at the minimum size,
+ * it stays scrollable so nothing is cut off.
  */
-private fun calculateExpressionFontSize(length: Int): TextUnit {
-    return when {
-        length <= 10 -> 38.sp
-        length <= 16 -> 32.sp
-        length <= 22 -> 26.sp
-        length <= 28 -> 22.sp
-        length <= 36 -> 19.sp
-        else -> 17.sp
-    }
-}
+@Composable
+private fun AutoSizeText(
+    text: String,
+    color: Color,
+    maxFontSize: TextUnit,
+    fontWeight: FontWeight,
+    testTag: String,
+    minFontSize: TextUnit = 12.sp
+) {
+    val measurer = rememberTextMeasurer()
 
-/**
- * Calculates adaptive font size for result:
- * Starts at 44sp and shrinks down to 18sp so it never overflows
- */
-private fun calculateResultFontSize(length: Int): TextUnit {
-    return when {
-        length <= 10 -> 44.sp
-        length <= 16 -> 36.sp
-        length <= 22 -> 28.sp
-        length <= 28 -> 22.sp
-        length <= 36 -> 19.sp
-        else -> 17.sp
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val availableWidth = constraints.maxWidth
+
+        val fontSize = remember(text, availableWidth, maxFontSize, minFontSize, fontWeight) {
+            var size = maxFontSize.value
+            val minSize = minFontSize.value
+            while (size > minSize) {
+                val measuredWidth = measurer.measure(
+                    text = text,
+                    style = TextStyle(
+                        fontSize = size.sp,
+                        fontWeight = fontWeight,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    softWrap = false,
+                    maxLines = 1,
+                    constraints = Constraints()
+                ).size.width
+                if (measuredWidth <= availableWidth) break
+                size -= 1f
+            }
+            size.sp
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState(), reverseScrolling = true),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = text,
+                color = color,
+                fontSize = fontSize,
+                fontWeight = fontWeight,
+                fontFamily = FontFamily.Monospace,
+                textAlign = TextAlign.End,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.testTag(testTag)
+            )
+        }
     }
 }
 
