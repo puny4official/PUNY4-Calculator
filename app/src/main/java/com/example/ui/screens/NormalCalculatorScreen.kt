@@ -129,7 +129,7 @@ fun NormalCalculatorScreen(
                             ) {
                                 Text(
                                     text = resultWordsFa!!,
-                                    color = if (isDark) PurpleAccent else PurpleTertiary,
+                                    color = if (isDark) Color.White else Color.Black,
                                     fontSize = 19.sp, // LARGER PER REQUEST
                                     fontWeight = FontWeight.Bold,
                                     lineHeight = 27.sp,
