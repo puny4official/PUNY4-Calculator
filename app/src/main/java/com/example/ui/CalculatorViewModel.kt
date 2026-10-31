@@ -143,6 +143,52 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /**
+     * Toggles the sign of the last number in the expression (or of the shown result).
+     * Negative numbers after an operator are wrapped in parentheses, e.g. 2×(−5),
+     * because the engine reads a leading minus as "0 − x".
+     */
+    fun onToggleSign() {
+        val result = _displayedResult.value
+        if (result != null && !_isResultError.value) {
+            val clean = result.replace(",", "")
+            _expression.value =
+                if (clean.startsWith("-") || clean.startsWith("−")) clean.substring(1)
+                else "−$clean"
+            _displayedResult.value = null
+            _resultWordsFa.value = null
+            _isResultError.value = false
+            return
+        }
+        if (result != null) return
+
+        val cur = _expression.value
+        if (cur == "0") {
+            _expression.value = "−"
+            return
+        }
+        if (cur == "−") {
+            _expression.value = "0"
+            return
+        }
+
+        // Unwrap an already negative last number: (−5) -> 5, or a leading −5 -> 5
+        Regex("\\(−([0-9.]+)\\)$").find(cur)?.let { m ->
+            _expression.value = cur.substring(0, m.range.first) + m.groupValues[1]
+            return
+        }
+        Regex("^−([0-9.]+)$").find(cur)?.let { m ->
+            _expression.value = m.groupValues[1]
+            return
+        }
+
+        // Negate the last plain number
+        val m = Regex("[0-9.]+$").find(cur) ?: return
+        val number = m.value
+        val prefix = cur.substring(0, m.range.first)
+        _expression.value = if (prefix.isEmpty()) "−$number" else "$prefix(−$number)"
+    }
+
     fun onBackspace() {
         if (_displayedResult.value != null) {
             _displayedResult.value = null
