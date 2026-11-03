@@ -246,7 +246,8 @@ fun NormalCalculatorScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "برگشت به روی سوال",
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
+                    color = if (isDark) Color.White else Color.Black,
                     fontWeight = FontWeight.Bold
                 )
             }
