@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,10 +16,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CornerRadius
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -166,22 +172,33 @@ fun MainTopBar(
             )
 
             // Hamburger Menu Button (Top Right)
+            val menuButtonShape = RoundedCornerShape(18.dp)
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(historyButtonShape)
+                    .clip(menuButtonShape)
                     .background(historyGlass)
-                    .border(1.dp, historyGlassBorder, historyButtonShape)
+                    .border(1.dp, historyGlassBorder, menuButtonShape)
                     .clickable(role = Role.Button) { viewModel.setDrawerOpen(true) }
-                    .testTag("top_bar_hamburger_button"),
+                    .testTag("top_bar_hamburger_button")
+                    .semantics { contentDescription = "منو" },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "منو",
-                    tint = Color(0xFFC2185B),
-                    modifier = Modifier.size(26.dp)
-                )
+                Canvas(modifier = Modifier.size(width = 30.dp, height = 24.dp)) {
+                    val barHeight = 4.dp.toPx()
+                    val barGap = 5.dp.toPx()
+                    val totalHeight = barHeight * 3 + barGap * 2
+                    val firstBarY = (size.height - totalHeight) / 2
+                    repeat(3) { index ->
+                        val top = firstBarY + index * (barHeight + barGap)
+                        drawRoundRect(
+                            color = Color(0xFFD81B60),
+                            topLeft = Offset(0f, top),
+                            size = Size(size.width, barHeight),
+                            cornerRadius = CornerRadius(barHeight / 2)
+                        )
+                    }
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
