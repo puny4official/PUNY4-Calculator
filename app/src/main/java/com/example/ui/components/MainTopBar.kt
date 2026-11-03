@@ -15,8 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,20 +37,41 @@ fun MainTopBar(
     val currentScreen by viewModel.currentScreen.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
+    val historyButtonShape = RoundedCornerShape(16.dp)
+    val historyGlass = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFFFFF4F8).copy(alpha = 0.92f),
+            Color(0xFFFFC4DC).copy(alpha = 0.72f),
+            Color(0xFFF472B6).copy(alpha = 0.34f)
+        )
+    )
+    val historyGlassBorder = Brush.linearGradient(
+        colors = listOf(
+            Color.White.copy(alpha = 0.96f),
+            Color(0xFFE879A9).copy(alpha = 0.48f)
+        )
+    )
 
     TopAppBar(
         title = {},
         navigationIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // History Button
-                IconButton(
-                    onClick = { viewModel.setHistoryOpen(true) },
-                    modifier = Modifier.testTag("top_bar_history_button")
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(historyButtonShape)
+                        .background(historyGlass)
+                        .border(1.dp, historyGlassBorder, historyButtonShape)
+                        .clickable(role = Role.Button) { viewModel.setHistoryOpen(true) }
+                        .testTag("top_bar_history_button"),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.History,
                         contentDescription = "تاریخچه",
-                        tint = PurpleSecondary
+                        tint = Color(0xFFC2185B),
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 
