@@ -20,6 +20,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -484,6 +486,45 @@ private fun formatExpressionWithCommas(expr: String): String {
     return sb.toString()
 }
 
+private fun calculatorButtonFace(
+    modifier: Modifier,
+    containerColor: Color,
+    shape: RoundedCornerShape
+): Modifier {
+    val isEqual = containerColor == LightKeyEqualBg || containerColor == AmoledKeyEqualBg
+    val colors = when (containerColor) {
+        LightKeyNumberBg -> listOf(Color(0xFFFFFFFF), Color(0xFFFDFBFF), Color(0xFFF4F2FA))
+        LightKeyOperatorBg -> listOf(Color(0xFFFAFFFC), Color(0xFFEFF8F2), Color(0xFFE8F2EC))
+        LightKeyClearBg -> listOf(Color(0xFFFFFAFC), Color(0xFFFFF0F5), Color(0xFFF8E6ED))
+        LightKeyEqualBg -> listOf(Color(0xFF35B85F), Color(0xFF16A34A), Color(0xFF0D873C))
+        else -> listOf(containerColor, containerColor, containerColor)
+    }
+    val outline = when (containerColor) {
+        LightKeyNumberBg -> Color(0xFFE6E2EF)
+        LightKeyOperatorBg -> Color(0xFFDDEBE2)
+        LightKeyClearBg -> Color(0xFFF2DCE5)
+        LightKeyEqualBg -> Color(0xFF79D494)
+        else -> Color.White.copy(alpha = 0.16f)
+    }
+    val shadowColor = when {
+        containerColor == LightKeyEqualBg -> Color(0xFF188F43).copy(alpha = 0.46f)
+        containerColor == AmoledKeyEqualBg -> Color(0xFFA855F7).copy(alpha = 0.32f)
+        else -> Color(0xFF6A6480).copy(alpha = 0.16f)
+    }
+
+    return modifier
+        .shadow(
+            elevation = if (isEqual) 8.dp else 5.dp,
+            shape = shape,
+            clip = false,
+            ambientColor = shadowColor,
+            spotColor = shadowColor
+        )
+        .clip(shape)
+        .background(Brush.verticalGradient(colors))
+        .border(1.dp, outline, shape)
+}
+
 @Composable
 fun CalcButton(
     text: String,
@@ -492,15 +533,25 @@ fun CalcButton(
     contentColor: Color,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(26.dp)
     Button(
         onClick = onClick,
-        modifier = modifier
-            .height(58.dp)
-            .testTag("key_$text"),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
+        modifier = calculatorButtonFace(
+            modifier = modifier.height(58.dp).testTag("key_$text"),
             containerColor = containerColor,
+            shape = shape
+        ),
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
             contentColor = contentColor
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            disabledElevation = 0.dp
         ),
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -523,15 +574,25 @@ fun CalcIconButton(
     contentDescription: String = "حذف",
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(26.dp)
     Button(
         onClick = onClick,
-        modifier = modifier
-            .height(58.dp)
-            .testTag(testTag),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
+        modifier = calculatorButtonFace(
+            modifier = modifier.height(58.dp).testTag(testTag),
             containerColor = containerColor,
+            shape = shape
+        ),
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
             contentColor = contentColor
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            disabledElevation = 0.dp
         ),
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -552,15 +613,25 @@ fun CalcMiniButton(
     contentColor: Color,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(18.dp)
     Button(
         onClick = onClick,
-        modifier = modifier
-            .height(38.dp)
-            .testTag("key_mini_$text"),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
+        modifier = calculatorButtonFace(
+            modifier = modifier.height(38.dp).testTag("key_mini_$text"),
             containerColor = containerColor,
+            shape = shape
+        ),
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
             contentColor = contentColor
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            disabledElevation = 0.dp
         ),
         contentPadding = PaddingValues(0.dp)
     ) {
