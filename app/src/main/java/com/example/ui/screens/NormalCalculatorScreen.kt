@@ -345,7 +345,8 @@ fun NormalCalculatorScreen(
  * Monospace text whose font size shrinks (1sp at a time) until it fits the available width.
  * The smallest size it may shrink to is the size at which [referenceText] (15 digits) just
  * fits the width. Once the text would need to go below that size, the font size stays there
- * and the text wraps onto additional lines instead.
+ * and the text continues on the next lines: every line is filled completely and the rest of
+ * the number goes below it, left-aligned, in reading order.
  */
 @Composable
 private fun AutoSizeText(
@@ -362,20 +363,28 @@ private fun AutoSizeText(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val availableWidth = constraints.maxWidth
 
-        // Pair of (font size, needs wrapping)
-        val layoutChoice = remember(text, availableWidth, maxFontSize, referenceText, fontWeight) {
-            fun widthAt(value: String, fontSizeSp: Float): Int = measurer.measure(
-                text = value,
-                style = TextStyle(
-                    fontSize = fontSizeSp.sp,
-                    fontWeight = fontWeight,
-                    fontFamily = FontFamily.Monospace
-                ),
-                softWrap = false,
-                maxLines = 1,
-                constraints = Constraints()
-            ).size.width
+        // Same style for measuring and drawing. It is explicit on purpose: the inherited
+        // Material style adds letter spacing and a fixed 24sp line height, which made
+        // wrapped lines overlap and the measured width differ from the drawn width.
+        fun styleAt(fontSizeSp: Float) = TextStyle(
+            fontSize = fontSizeSp.sp,
+            fontWeight = fontWeight,
+            fontFamily = FontFamily.Monospace,
+            letterSpacing = 0.sp,
+            lineHeight = (fontSizeSp * 1.2f).sp,
+            textDirection = TextDirection.Ltr
+        )
 
+        fun widthAt(value: String, fontSizeSp: Float): Int = measurer.measure(
+            text = value,
+            style = styleAt(fontSizeSp),
+            softWrap = false,
+            maxLines = 1,
+            constraints = Constraints()
+        ).size.width
+
+        // Triple of (font size in sp, needs wrapping, characters that fit on one line)
+        val layoutChoice = remember(text, availableWidth, maxFontSize, referenceText, fontWeight) {
             // Minimum size: where the reference number just fits the width
             var minSize = maxFontSize.value
             while (minSize > 8f && widthAt(referenceText, minSize) > availableWidth) {
@@ -392,21 +401,32 @@ private fun AutoSizeText(
                 if (size <= minSize) break
                 size = maxOf(size - 1f, minSize)
             }
-            size.sp to !fits
+
+            val charsPerLine = if (fits) {
+                0
+            } else {
+                // Monospace: every character has the same width
+                val tenCharsWidth = widthAt("0".repeat(10), size).coerceAtLeast(1)
+                maxOf(1, (availableWidth * 10f / tenCharsWidth).toInt())
+            }
+            Triple(size, !fits, charsPerLine)
         }
-        val fontSize = layoutChoice.first
+        val fontSizeSp = layoutChoice.first
         val needsWrap = layoutChoice.second
+        val charsPerLine = layoutChoice.third
+
+        // Numbers and expressions are cut into full lines; Persian messages wrap by words
+        val hasPersian = text.any { it.code in 0x0600..0x06FF }
+        val chunked = needsWrap && !hasPersian
+        val shownText = if (chunked) text.chunked(charsPerLine).joinToString("\n") else text
 
         Text(
-            text = text,
+            text = shownText,
             color = color,
-            fontSize = fontSize,
-            fontWeight = fontWeight,
-            fontFamily = FontFamily.Monospace,
-            textAlign = TextAlign.End,
-            style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
+            style = styleAt(fontSizeSp),
+            textAlign = if (needsWrap) TextAlign.Start else TextAlign.End,
             maxLines = if (needsWrap) Int.MAX_VALUE else 1,
-            softWrap = needsWrap,
+            softWrap = needsWrap && !chunked,
             modifier = Modifier
                 .fillMaxWidth()
                 .then(
