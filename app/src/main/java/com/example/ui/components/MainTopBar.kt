@@ -166,14 +166,21 @@ fun MainTopBar(
             )
 
             // Hamburger Menu Button (Top Right)
-            IconButton(
-                onClick = { viewModel.setDrawerOpen(true) },
-                modifier = Modifier.testTag("top_bar_hamburger_button")
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(historyButtonShape)
+                    .background(historyGlass)
+                    .border(1.dp, historyGlassBorder, historyButtonShape)
+                    .clickable(role = Role.Button) { viewModel.setDrawerOpen(true) }
+                    .testTag("top_bar_hamburger_button"),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "منو",
-                    tint = PurplePrimary
+                    tint = Color(0xFFC2185B),
+                    modifier = Modifier.size(26.dp)
                 )
             }
         },
