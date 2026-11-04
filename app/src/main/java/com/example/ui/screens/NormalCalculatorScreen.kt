@@ -37,6 +37,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -249,6 +251,7 @@ fun NormalCalculatorScreen(
                     .testTag("key_return_to_expression")
             )
 
+            if (isDark) {
             // Row 1: AC, Backspace, ( ), ÷
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -334,6 +337,97 @@ fun NormalCalculatorScreen(
                     contentColor = Color.White,
                     onClick = { viewModel.onCalculate() }
                 )
+            }
+            } else {
+                // Light mode: the keypad is the supplied glass image with tap areas on top
+                GlassKeypad(viewModel = viewModel)
+            }
+        }
+    }
+}
+
+/** One tappable key placed over a button of the glass keypad image. */
+private class GlassKey(
+    val tag: String,
+    val description: String,
+    val action: (CalculatorViewModel) -> Unit
+)
+
+private fun glassInput(symbol: String, description: String = symbol) =
+    GlassKey("key_$symbol", description) { it.onInput(symbol) }
+
+private val glassKeyRows: List<List<GlassKey>> = listOf(
+    listOf(
+        GlassKey("key_AC", "پاک کردن همه") { it.onClear() },
+        GlassKey("key_backspace", "حذف") { it.onBackspace() },
+        GlassKey("key_toggle_sign", "تغییر علامت") { it.onToggleSign() },
+        glassInput("÷", "تقسیم")
+    ),
+    listOf(glassInput("7"), glassInput("8"), glassInput("9"), glassInput("×", "ضرب")),
+    listOf(glassInput("4"), glassInput("5"), glassInput("6"), glassInput("−", "تفریق")),
+    listOf(glassInput("1"), glassInput("2"), glassInput("3"), glassInput("+", "جمع")),
+    listOf(
+        glassInput(".", "ممیز"),
+        glassInput("0"),
+        glassInput("%", "درصد"),
+        GlassKey("key_=", "مساوی") { it.onCalculate() }
+    )
+)
+
+// Size of keypad_glass.webp and where its 4x5 grid of buttons starts/ends (in image pixels)
+private const val GLASS_IMAGE_WIDTH = 841f
+private const val GLASS_IMAGE_HEIGHT = 618f
+private const val GLASS_GRID_LEFT = 26f
+private const val GLASS_GRID_RIGHT = 25f
+private const val GLASS_GRID_TOP = 11f
+private const val GLASS_GRID_BOTTOM = 8f
+
+/**
+ * The keypad drawn by the supplied image (shown exactly as it is) with an invisible
+ * grid of tap areas on top, one over each button of the image.
+ */
+@Composable
+private fun GlassKeypad(viewModel: CalculatorViewModel) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(GLASS_IMAGE_WIDTH / GLASS_IMAGE_HEIGHT)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.keypad_glass),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = maxWidth * (GLASS_GRID_LEFT / GLASS_IMAGE_WIDTH),
+                    end = maxWidth * (GLASS_GRID_RIGHT / GLASS_IMAGE_WIDTH),
+                    top = maxHeight * (GLASS_GRID_TOP / GLASS_IMAGE_HEIGHT),
+                    bottom = maxHeight * (GLASS_GRID_BOTTOM / GLASS_IMAGE_HEIGHT)
+                )
+        ) {
+            glassKeyRows.forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    row.forEach { key ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(22.dp))
+                                .clickable(onClickLabel = key.description) { key.action(viewModel) }
+                                .semantics { contentDescription = key.description }
+                                .testTag(key.tag)
+                        )
+                    }
+                }
             }
         }
     }
