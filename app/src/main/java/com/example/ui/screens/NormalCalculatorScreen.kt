@@ -251,97 +251,7 @@ fun NormalCalculatorScreen(
                     .testTag("key_return_to_expression")
             )
 
-            if (isDark) {
-            // Row 1: AC, Backspace, ( ), ÷
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CalcButton(
-                    text = "AC",
-                    modifier = Modifier.weight(1f),
-                    containerColor = keyClearBg,
-                    contentColor = keyClearText,
-                    onClick = { viewModel.onClear() }
-                )
-                CalcIconButton(
-                    icon = Icons.Default.Backspace,
-                    modifier = Modifier.weight(1f),
-                    containerColor = keyClearBg,
-                    contentColor = keyClearText,
-                    onClick = { viewModel.onBackspace() }
-                )
-                CalcIconButton(
-                    icon = PlusMinusIcon,
-                    modifier = Modifier.weight(1f),
-                    containerColor = keyOperatorBg,
-                    contentColor = keyOperatorText,
-                    testTag = "key_toggle_sign",
-                    contentDescription = "تغییر علامت",
-                    onClick = { viewModel.onToggleSign() }
-                )
-                CalcButton(
-                    text = "÷",
-                    modifier = Modifier.weight(1f),
-                    containerColor = keyOperatorBg,
-                    contentColor = keyOperatorText,
-                    onClick = { viewModel.onInput("÷") }
-                )
-            }
-
-            // Row 2: 7, 8, 9, ×
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CalcButton("7", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("7") }
-                CalcButton("8", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("8") }
-                CalcButton("9", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("9") }
-                CalcButton("×", Modifier.weight(1f), keyOperatorBg, keyOperatorText) { viewModel.onInput("×") }
-            }
-
-            // Row 3: 4, 5, 6, −
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CalcButton("4", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("4") }
-                CalcButton("5", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("5") }
-                CalcButton("6", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("6") }
-                CalcButton("−", Modifier.weight(1f), keyOperatorBg, keyOperatorText) { viewModel.onInput("−") }
-            }
-
-            // Row 4: 1, 2, 3, +
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CalcButton("1", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("1") }
-                CalcButton("2", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("2") }
-                CalcButton("3", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("3") }
-                CalcButton("+", Modifier.weight(1f), keyOperatorBg, keyOperatorText) { viewModel.onInput("+") }
-            }
-
-            // Row 5: ., 0, %, =
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CalcButton(".", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput(".") }
-                CalcButton("0", Modifier.weight(1f), keyNumberBg, keyNumberText) { viewModel.onInput("0") }
-                CalcButton("%", Modifier.weight(1f), keyOperatorBg, keyOperatorText) { viewModel.onInput("%") }
-                CalcButton(
-                    text = "=",
-                    modifier = Modifier.weight(1f),
-                    containerColor = keyEqualBg,
-                    contentColor = Color.White,
-                    onClick = { viewModel.onCalculate() }
-                )
-            }
-            } else {
-                // Light mode: the keypad is the supplied glass image with tap areas on top
-                GlassKeypad(viewModel = viewModel)
-            }
+            GlassKeypad(viewModel = viewModel, isDark = isDark)
         }
     }
 }
@@ -374,27 +284,49 @@ private val glassKeyRows: List<List<GlassKey>> = listOf(
     )
 )
 
-// Size of keypad_glass.webp and where its 4x5 grid of buttons starts/ends (in image pixels)
-private const val GLASS_IMAGE_WIDTH = 841f
-private const val GLASS_IMAGE_HEIGHT = 618f
-private const val GLASS_GRID_LEFT = 26f
-private const val GLASS_GRID_RIGHT = 25f
-private const val GLASS_GRID_TOP = 11f
-private const val GLASS_GRID_BOTTOM = 8f
+/**
+ * A keypad picture together with where its buttons are (in image pixels):
+ * the boundaries between the 4 columns and between the 5 rows (outer edges included).
+ */
+private class KeypadImage(
+    val resId: Int,
+    val width: Float,
+    val height: Float,
+    val columnEdges: List<Float>,
+    val rowEdges: List<Float>
+)
+
+private val lightKeypadImage = KeypadImage(
+    resId = R.drawable.keypad_glass,
+    width = 841f,
+    height = 618f,
+    columnEdges = listOf(26f, 220.5f, 419.5f, 618f, 816f),
+    rowEdges = listOf(11f, 128f, 245.5f, 364.5f, 483.5f, 610f)
+)
+
+private val darkKeypadImage = KeypadImage(
+    resId = R.drawable.keypad_glass_dark,
+    width = 1670f,
+    height = 941f,
+    columnEdges = listOf(48f, 438.5f, 832.5f, 1227.5f, 1618f),
+    rowEdges = listOf(22f, 223f, 410f, 596.5f, 768.5f, 927f)
+)
 
 /**
- * The keypad drawn by the supplied image (shown exactly as it is) with an invisible
- * grid of tap areas on top, one over each button of the image.
+ * The keypad drawn by the supplied image for the current theme (shown exactly as it is)
+ * with an invisible grid of tap areas on top, one over each button of the image.
  */
 @Composable
-private fun GlassKeypad(viewModel: CalculatorViewModel) {
+private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean) {
+    val keypad = if (isDark) darkKeypadImage else lightKeypadImage
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(GLASS_IMAGE_WIDTH / GLASS_IMAGE_HEIGHT)
+            .aspectRatio(keypad.width / keypad.height)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.keypad_glass),
+            painter = painterResource(id = keypad.resId),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
@@ -404,22 +336,22 @@ private fun GlassKeypad(viewModel: CalculatorViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = maxWidth * (GLASS_GRID_LEFT / GLASS_IMAGE_WIDTH),
-                    end = maxWidth * (GLASS_GRID_RIGHT / GLASS_IMAGE_WIDTH),
-                    top = maxHeight * (GLASS_GRID_TOP / GLASS_IMAGE_HEIGHT),
-                    bottom = maxHeight * (GLASS_GRID_BOTTOM / GLASS_IMAGE_HEIGHT)
+                    start = maxWidth * (keypad.columnEdges.first() / keypad.width),
+                    end = maxWidth * ((keypad.width - keypad.columnEdges.last()) / keypad.width),
+                    top = maxHeight * (keypad.rowEdges.first() / keypad.height),
+                    bottom = maxHeight * ((keypad.height - keypad.rowEdges.last()) / keypad.height)
                 )
         ) {
-            glassKeyRows.forEach { row ->
+            glassKeyRows.forEachIndexed { rowIndex, row ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
+                        .weight(keypad.rowEdges[rowIndex + 1] - keypad.rowEdges[rowIndex])
                 ) {
-                    row.forEach { key ->
+                    row.forEachIndexed { columnIndex, key ->
                         Box(
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(keypad.columnEdges[columnIndex + 1] - keypad.columnEdges[columnIndex])
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(22.dp))
                                 .clickable(onClickLabel = key.description) { key.action(viewModel) }
@@ -615,86 +547,6 @@ private fun calculatorButtonFace(
 }
 
 @Composable
-fun CalcButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    containerColor: Color,
-    contentColor: Color,
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(26.dp)
-    Button(
-        onClick = onClick,
-        modifier = calculatorButtonFace(
-            modifier = modifier.height(58.dp).testTag("key_$text"),
-            containerColor = containerColor,
-            shape = shape
-        ),
-        shape = shape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = contentColor
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp,
-            focusedElevation = 0.dp,
-            hoveredElevation = 0.dp,
-            disabledElevation = 0.dp
-        ),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun CalcIconButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier,
-    containerColor: Color,
-    contentColor: Color,
-    testTag: String = "key_backspace",
-    contentDescription: String = "حذف",
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(26.dp)
-    Button(
-        onClick = onClick,
-        modifier = calculatorButtonFace(
-            modifier = modifier.height(58.dp).testTag(testTag),
-            containerColor = containerColor,
-            shape = shape
-        ),
-        shape = shape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = contentColor
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp,
-            focusedElevation = 0.dp,
-            hoveredElevation = 0.dp,
-            disabledElevation = 0.dp
-        ),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = contentColor,
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
-
-@Composable
 fun CalcMiniButton(
     text: String,
     modifier: Modifier = Modifier,
@@ -733,25 +585,3 @@ fun CalcMiniButton(
     }
 }
 
-/** "+/−" sign toggle icon: plus (top-left), minus (bottom-right) and a diagonal slash. */
-private val PlusMinusIcon: ImageVector = ImageVector.Builder(
-    name = "PlusMinus",
-    defaultWidth = 24.dp,
-    defaultHeight = 24.dp,
-    viewportWidth = 24f,
-    viewportHeight = 24f
-).apply {
-    path(
-        stroke = SolidColor(Color.Black),
-        strokeLineWidth = 2f,
-        strokeLineCap = StrokeCap.Round
-    ) {
-        // plus
-        moveTo(3.5f, 7f); lineTo(10.5f, 7f)
-        moveTo(7f, 3.5f); lineTo(7f, 10.5f)
-        // slash
-        moveTo(17f, 3.5f); lineTo(8f, 20.5f)
-        // minus
-        moveTo(13.5f, 18f); lineTo(20.5f, 18f)
-    }
-}.build()
