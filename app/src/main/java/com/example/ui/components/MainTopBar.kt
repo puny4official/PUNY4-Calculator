@@ -3,6 +3,7 @@ package com.example.ui.components
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +22,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -30,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
+import com.example.R
 import com.example.ui.ActiveScreen
 import com.example.ui.CalculatorViewModel
 import com.example.ui.theme.*
@@ -43,6 +47,13 @@ fun MainTopBar(
     val currentScreen by viewModel.currentScreen.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
+
+    // Light mode: the whole bar is the supplied image with tap areas over its buttons
+    if (!isDark) {
+        GlassTopBar(viewModel = viewModel, modifier = modifier)
+        return
+    }
+
     val historyButtonShape = RoundedCornerShape(16.dp)
     val historyGlass = Brush.linearGradient(
         colors = listOf(
@@ -113,52 +124,13 @@ fun MainTopBar(
                             tint = PurpleSecondary
                         )
                     }
-                    DropdownMenu(
+                    ThemeDropdown(
                         expanded = themeMenuOpen,
-                        onDismissRequest = { themeMenuOpen = false },
-                        modifier = Modifier.background(if (isDark) AmoledDisplaySurface else LightDisplaySurface)
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "لایت مود",
-                                    color = if (isDark) TextPrimary else LightTextPrimary
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.LightMode, contentDescription = null, tint = PurpleSecondary)
-                            },
-                            trailingIcon = {
-                                if (themeMode == AppThemeMode.LIGHT) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
-                                }
-                            },
-                            onClick = {
-                                viewModel.setThemeMode(AppThemeMode.LIGHT)
-                                themeMenuOpen = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "دارک مود امولد",
-                                    color = if (isDark) TextPrimary else LightTextPrimary
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.DarkMode, contentDescription = null, tint = PurpleSecondary)
-                            },
-                            trailingIcon = {
-                                if (themeMode == AppThemeMode.AMOLED_DARK) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
-                                }
-                            },
-                            onClick = {
-                                viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
-                                themeMenuOpen = false
-                            }
-                        )
-                    }
+                        onDismiss = { themeMenuOpen = false },
+                        viewModel = viewModel,
+                        themeMode = themeMode,
+                        isDark = isDark
+                    )
                 }
             }
         },
@@ -206,6 +178,153 @@ fun MainTopBar(
         ),
         modifier = modifier
     )
+}
+
+/** Menu with the two appearance modes (light / AMOLED dark). */
+@Composable
+private fun ThemeDropdown(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    viewModel: CalculatorViewModel,
+    themeMode: AppThemeMode,
+    isDark: Boolean
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        modifier = Modifier.background(if (isDark) AmoledDisplaySurface else LightDisplaySurface)
+    ) {
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = "لایت مود",
+                    color = if (isDark) TextPrimary else LightTextPrimary
+                )
+            },
+            leadingIcon = {
+                Icon(Icons.Default.LightMode, contentDescription = null, tint = PurpleSecondary)
+            },
+            trailingIcon = {
+                if (themeMode == AppThemeMode.LIGHT) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+                }
+            },
+            onClick = {
+                viewModel.setThemeMode(AppThemeMode.LIGHT)
+                onDismiss()
+            }
+        )
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = "دارک مود امولد",
+                    color = if (isDark) TextPrimary else LightTextPrimary
+                )
+            },
+            leadingIcon = {
+                Icon(Icons.Default.DarkMode, contentDescription = null, tint = PurpleSecondary)
+            },
+            trailingIcon = {
+                if (themeMode == AppThemeMode.AMOLED_DARK) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+                }
+            },
+            onClick = {
+                viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
+                onDismiss()
+            }
+        )
+    }
+}
+
+// Size of top_bar_glass.webp (as cropped) and the horizontal span of each button (image pixels)
+private const val TOP_BAR_IMAGE_WIDTH = 2172f
+private const val TOP_BAR_IMAGE_HEIGHT = 260f
+private const val TOP_BAR_HISTORY_LEFT = 63f
+private const val TOP_BAR_HISTORY_RIGHT = 286f
+private const val TOP_BAR_SCOPE_LEFT = 308f
+private const val TOP_BAR_SCOPE_RIGHT = 530f
+private const val TOP_BAR_THEME_LEFT = 544f
+private const val TOP_BAR_THEME_RIGHT = 765f
+private const val TOP_BAR_MENU_LEFT = 1936f
+private const val TOP_BAR_MENU_RIGHT = 2146f
+
+/**
+ * Light-mode top bar: the supplied image (shown exactly as it is) with an invisible
+ * tap area over each of its four buttons.
+ */
+@Composable
+private fun GlassTopBar(
+    viewModel: CalculatorViewModel,
+    modifier: Modifier = Modifier
+) {
+    val themeMode by viewModel.themeMode.collectAsState()
+    var themeMenuOpen by remember { mutableStateOf(false) }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .aspectRatio(TOP_BAR_IMAGE_WIDTH / TOP_BAR_IMAGE_HEIGHT)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.top_bar_glass),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        @Composable
+        fun TapArea(
+            left: Float,
+            right: Float,
+            tag: String,
+            description: String,
+            onClick: () -> Unit,
+            content: @Composable BoxScope.() -> Unit = {}
+        ) {
+            Box(
+                modifier = Modifier
+                    .offset(x = maxWidth * (left / TOP_BAR_IMAGE_WIDTH))
+                    .width(maxWidth * ((right - left) / TOP_BAR_IMAGE_WIDTH))
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .semantics { contentDescription = description }
+                    .testTag(tag),
+                content = content
+            )
+        }
+
+        TapArea(
+            TOP_BAR_HISTORY_LEFT, TOP_BAR_HISTORY_RIGHT,
+            "top_bar_history_button", "تاریخچه",
+            onClick = { viewModel.setHistoryOpen(true) }
+        )
+        TapArea(
+            TOP_BAR_SCOPE_LEFT, TOP_BAR_SCOPE_RIGHT,
+            "top_bar_scope_button", "دامنه و راهنما",
+            onClick = { viewModel.setScopeOpen(true) }
+        )
+        TapArea(
+            TOP_BAR_THEME_LEFT, TOP_BAR_THEME_RIGHT,
+            "top_bar_theme_button", "ظاهر",
+            onClick = { themeMenuOpen = true }
+        ) {
+            ThemeDropdown(
+                expanded = themeMenuOpen,
+                onDismiss = { themeMenuOpen = false },
+                viewModel = viewModel,
+                themeMode = themeMode,
+                isDark = false
+            )
+        }
+        TapArea(
+            TOP_BAR_MENU_LEFT, TOP_BAR_MENU_RIGHT,
+            "top_bar_hamburger_button", "منو",
+            onClick = { viewModel.setDrawerOpen(true) }
+        )
+    }
 }
 
 /**
