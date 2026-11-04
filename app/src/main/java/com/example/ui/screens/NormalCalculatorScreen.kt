@@ -237,7 +237,10 @@ fun NormalCalculatorScreen(
             // The whole button (glass pill, glow, arrow and text) is the supplied image.
             val canReturnToExpression = displayedResult != null
             Image(
-                painter = painterResource(id = R.drawable.btn_return_to_question),
+                painter = painterResource(
+                    id = if (isDark) R.drawable.btn_return_to_question_dark
+                    else R.drawable.btn_return_to_question_light
+                ),
                 contentDescription = "برگشت به روی سوال",
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
