@@ -2,6 +2,8 @@ package com.example.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -31,7 +34,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -44,6 +49,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.math.calculator.ScientificEngine
 import com.example.ui.CalculatorViewModel
 import com.example.ui.theme.*
@@ -225,62 +231,23 @@ fun NormalCalculatorScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Return to the question after "=" so it can be edited again
+            // Return to the question after "=" so it can be edited again.
+            // The whole button (glass pill, glow, arrow and text) is the supplied image.
             val canReturnToExpression = displayedResult != null
-            val returnTextColor = if (isDark) Color.White else Color.Black
-            val returnContentColor = if (canReturnToExpression) {
-                returnTextColor
-            } else {
-                returnTextColor.copy(alpha = 0.4f)
-            }
-            Button(
-                onClick = { viewModel.onReturnToExpression() },
-                enabled = canReturnToExpression,
-                modifier = returnButtonFace(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .testTag("key_return_to_expression"),
-                    isDark = isDark,
-                    enabled = canReturnToExpression
-                ),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = returnTextColor,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor = returnTextColor.copy(alpha = 0.4f)
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp,
-                    focusedElevation = 0.dp,
-                    hoveredElevation = 0.dp,
-                    disabledElevation = 0.dp
-                ),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp)
-            ) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = null,
-                            tint = returnContentColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "برگشت به روی سوال",
-                            fontSize = 16.sp,
-                            color = returnContentColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+            Image(
+                painter = painterResource(id = R.drawable.btn_return_to_question),
+                contentDescription = "برگشت به روی سوال",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(if (canReturnToExpression) 1f else 0.4f)
+                    .clickable(
+                        enabled = canReturnToExpression,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { viewModel.onReturnToExpression() }
+                    .testTag("key_return_to_expression")
+            )
 
             // Row 1: AC, Backspace, ( ), ÷
             Row(
@@ -551,44 +518,6 @@ private fun calculatorButtonFace(
         .clip(shape)
         .background(Brush.verticalGradient(colors))
         .border(1.dp, outline, shape)
-}
-
-private fun returnButtonFace(
-    modifier: Modifier,
-    isDark: Boolean,
-    enabled: Boolean
-): Modifier {
-    val shape = CircleShape
-    val enabledAlpha = if (enabled) 1f else 0.4f
-    val backgroundColors = if (isDark) {
-        listOf(Color(0xFF352052), Color(0xFF21143D), Color(0xFF352052))
-    } else {
-        listOf(Color(0xFFFFFFFF), Color(0xFFFBF8FF), Color(0xFFF0E7FF))
-    }
-    val borderColors = if (isDark) {
-        listOf(Color(0xFF8B5CF6), Color(0xFFD8B4FE), Color(0xFFA855F7))
-    } else {
-        listOf(Color(0xFFB985FF), Color(0xFFE7D6FF), Color(0xFF9B6BEA))
-    }
-    val glowAlpha = (if (isDark) 0.36f else 0.32f) * enabledAlpha
-    val glowColor = (if (isDark) Color(0xFFA855F7) else Color(0xFFB985FF))
-        .copy(alpha = glowAlpha)
-
-    return modifier
-        .shadow(
-            elevation = if (enabled) 8.dp else 3.dp,
-            shape = shape,
-            clip = false,
-            ambientColor = glowColor,
-            spotColor = glowColor
-        )
-        .clip(shape)
-        .background(Brush.verticalGradient(backgroundColors.map { it.copy(alpha = it.alpha * enabledAlpha) }))
-        .border(
-            1.dp,
-            Brush.verticalGradient(borderColors.map { it.copy(alpha = it.alpha * enabledAlpha) }),
-            shape
-        )
 }
 
 @Composable
