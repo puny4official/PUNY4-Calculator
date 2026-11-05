@@ -118,7 +118,6 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         if (_displayedResult.value != null && isDigitOrDecimal(char)) {
             _expression.value = char
             _displayedResult.value = null
-            _previousLine.value = null
             _resultWordsFa.value = null
             _isResultError.value = false
             return
@@ -222,8 +221,14 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         _isResultError.value = false
     }
 
-    fun onClear() {
+    /** "AC": clears everything, including the faded earlier calculation at the top. */
+    fun onClearAll() {
         _previousLine.value = null
+        onClear()
+    }
+
+    /** "C": clears only the current question (and answer); the faded line at the top stays. */
+    fun onClear() {
         _expression.value = "0"
         _displayedResult.value = null
         _resultWordsFa.value = null
@@ -232,7 +237,6 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onCalculate() {
         val expr = _expression.value
-        _previousLine.value = null
         val result = ScientificEngine.evaluate(expr, _angleMode.value)
         when (result) {
             is ScientificEngine.EvaluationResult.Success -> {
