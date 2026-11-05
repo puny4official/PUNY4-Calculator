@@ -38,146 +38,15 @@ import com.example.ui.ActiveScreen
 import com.example.ui.CalculatorViewModel
 import com.example.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
     viewModel: CalculatorViewModel,
     modifier: Modifier = Modifier
 ) {
-    val currentScreen by viewModel.currentScreen.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
 
-    // Light mode: the whole bar is the supplied image with tap areas over its buttons
-    if (!isDark) {
-        GlassTopBar(viewModel = viewModel, modifier = modifier)
-        return
-    }
-
-    val historyButtonShape = RoundedCornerShape(16.dp)
-    val historyGlass = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFFFF4F8).copy(alpha = 0.92f),
-            Color(0xFFFFC4DC).copy(alpha = 0.72f),
-            Color(0xFFF472B6).copy(alpha = 0.34f)
-        )
-    )
-    val historyGlassBorder = Brush.linearGradient(
-        colors = listOf(
-            Color.White.copy(alpha = 0.96f),
-            Color(0xFFE879A9).copy(alpha = 0.48f)
-        )
-    )
-
-    TopAppBar(
-        title = {},
-        navigationIcon = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // History Button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(historyButtonShape)
-                        .background(historyGlass)
-                        .border(1.dp, historyGlassBorder, historyButtonShape)
-                        .clickable(role = Role.Button) { viewModel.setHistoryOpen(true) }
-                        .testTag("top_bar_history_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = "تاریخچه",
-                        tint = Color(0xFFC2185B),
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-
-                // Scope Button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(historyButtonShape)
-                        .background(historyGlass)
-                        .border(1.dp, historyGlassBorder, historyButtonShape)
-                        .clickable(role = Role.Button) { viewModel.setScopeOpen(true) }
-                        .testTag("top_bar_scope_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "دامنه و راهنما",
-                        tint = Color(0xFFC2185B),
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-
-                // Theme (Appearance) Button
-                var themeMenuOpen by remember { mutableStateOf(false) }
-                Box {
-                    IconButton(
-                        onClick = { themeMenuOpen = true },
-                        modifier = Modifier.testTag("top_bar_theme_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = "ظاهر",
-                            tint = PurpleSecondary
-                        )
-                    }
-                    ThemeDropdown(
-                        expanded = themeMenuOpen,
-                        onDismiss = { themeMenuOpen = false },
-                        viewModel = viewModel,
-                        themeMode = themeMode,
-                        isDark = isDark
-                    )
-                }
-            }
-        },
-        actions = {
-            // App name next to the hamburger menu
-            Text(
-                text = "PUNY4 Calculator",
-                color = if (isDark) TextPrimary else LightTextPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            // Hamburger Menu Button (Top Right)
-            val menuButtonShape = RoundedCornerShape(18.dp)
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(menuButtonShape)
-                    .background(historyGlass)
-                    .border(1.dp, historyGlassBorder, menuButtonShape)
-                    .clickable(role = Role.Button) { viewModel.setDrawerOpen(true) }
-                    .testTag("top_bar_hamburger_button")
-                    .semantics { contentDescription = "منو" },
-                contentAlignment = Alignment.Center
-            ) {
-                Canvas(modifier = Modifier.size(width = 30.dp, height = 24.dp)) {
-                    val barHeight = 4.dp.toPx()
-                    val barGap = 5.dp.toPx()
-                    val totalHeight = barHeight * 3 + barGap * 2
-                    val firstBarY = (size.height - totalHeight) / 2
-                    repeat(3) { index ->
-                        val top = firstBarY + index * (barHeight + barGap)
-                        drawRoundRect(
-                            color = Color(0xFFD81B60),
-                            topLeft = Offset(0f, top),
-                            size = Size(size.width, barHeight),
-                            cornerRadius = CornerRadius(barHeight / 2)
-                        )
-                    }
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = if (isDark) AmoledBackground else LightBackground
-        ),
-        modifier = modifier
-    )
+    GlassTopBar(viewModel = viewModel, isDark = isDark, modifier = modifier)
 }
 
 /** Menu with the two appearance modes (light / AMOLED dark). */
@@ -237,29 +106,51 @@ private fun ThemeDropdown(
     }
 }
 
-// Size of top_bar_glass.webp (as cropped) and the horizontal span of each button (image pixels)
+// Both top bar images were cropped to the same size, with the buttons at the same height
 private const val TOP_BAR_IMAGE_WIDTH = 2172f
 private const val TOP_BAR_IMAGE_HEIGHT = 260f
-private const val TOP_BAR_HISTORY_LEFT = 63f
-private const val TOP_BAR_HISTORY_RIGHT = 286f
-private const val TOP_BAR_SCOPE_LEFT = 308f
-private const val TOP_BAR_SCOPE_RIGHT = 530f
-private const val TOP_BAR_THEME_LEFT = 544f
-private const val TOP_BAR_THEME_RIGHT = 765f
-private const val TOP_BAR_MENU_LEFT = 1936f
-private const val TOP_BAR_MENU_RIGHT = 2146f
 
 /**
- * Light-mode top bar: the supplied image (shown exactly as it is) with an invisible
- * tap area over each of its four buttons.
+ * A top bar picture and the horizontal span (in image pixels) of its four buttons:
+ * history, scope (info), theme (palette) and menu (hamburger).
+ */
+private class TopBarImage(
+    val resId: Int,
+    val history: ClosedFloatingPointRange<Float>,
+    val scope: ClosedFloatingPointRange<Float>,
+    val theme: ClosedFloatingPointRange<Float>,
+    val menu: ClosedFloatingPointRange<Float>
+)
+
+private val lightTopBarImage = TopBarImage(
+    resId = R.drawable.top_bar_glass,
+    history = 63f..286f,
+    scope = 308f..530f,
+    theme = 544f..765f,
+    menu = 1936f..2146f
+)
+
+private val darkTopBarImage = TopBarImage(
+    resId = R.drawable.top_bar_glass_dark,
+    history = 62f..286f,
+    scope = 310f..525f,
+    theme = 547f..761f,
+    menu = 1967f..2168f
+)
+
+/**
+ * The top bar: the supplied image for the current theme (shown exactly as it is) with an
+ * invisible tap area over each of its four buttons.
  */
 @Composable
 private fun GlassTopBar(
     viewModel: CalculatorViewModel,
+    isDark: Boolean,
     modifier: Modifier = Modifier
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     var themeMenuOpen by remember { mutableStateOf(false) }
+    val bar = if (isDark) darkTopBarImage else lightTopBarImage
 
     BoxWithConstraints(
         modifier = modifier
@@ -268,7 +159,7 @@ private fun GlassTopBar(
             .aspectRatio(TOP_BAR_IMAGE_WIDTH / TOP_BAR_IMAGE_HEIGHT)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.top_bar_glass),
+            painter = painterResource(id = bar.resId),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
@@ -276,8 +167,7 @@ private fun GlassTopBar(
 
         @Composable
         fun TapArea(
-            left: Float,
-            right: Float,
+            span: ClosedFloatingPointRange<Float>,
             tag: String,
             description: String,
             onClick: () -> Unit,
@@ -285,8 +175,8 @@ private fun GlassTopBar(
         ) {
             Box(
                 modifier = Modifier
-                    .offset(x = maxWidth * (left / TOP_BAR_IMAGE_WIDTH))
-                    .width(maxWidth * ((right - left) / TOP_BAR_IMAGE_WIDTH))
+                    .offset(x = maxWidth * (span.start / TOP_BAR_IMAGE_WIDTH))
+                    .width(maxWidth * ((span.endInclusive - span.start) / TOP_BAR_IMAGE_WIDTH))
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(18.dp))
                     .clickable(role = Role.Button, onClick = onClick)
@@ -297,18 +187,15 @@ private fun GlassTopBar(
         }
 
         TapArea(
-            TOP_BAR_HISTORY_LEFT, TOP_BAR_HISTORY_RIGHT,
-            "top_bar_history_button", "تاریخچه",
+            bar.history, "top_bar_history_button", "تاریخچه",
             onClick = { viewModel.setHistoryOpen(true) }
         )
         TapArea(
-            TOP_BAR_SCOPE_LEFT, TOP_BAR_SCOPE_RIGHT,
-            "top_bar_scope_button", "دامنه و راهنما",
+            bar.scope, "top_bar_scope_button", "دامنه و راهنما",
             onClick = { viewModel.setScopeOpen(true) }
         )
         TapArea(
-            TOP_BAR_THEME_LEFT, TOP_BAR_THEME_RIGHT,
-            "top_bar_theme_button", "ظاهر",
+            bar.theme, "top_bar_theme_button", "ظاهر",
             onClick = { themeMenuOpen = true }
         ) {
             ThemeDropdown(
@@ -316,12 +203,11 @@ private fun GlassTopBar(
                 onDismiss = { themeMenuOpen = false },
                 viewModel = viewModel,
                 themeMode = themeMode,
-                isDark = false
+                isDark = isDark
             )
         }
         TapArea(
-            TOP_BAR_MENU_LEFT, TOP_BAR_MENU_RIGHT,
-            "top_bar_hamburger_button", "منو",
+            bar.menu, "top_bar_hamburger_button", "منو",
             onClick = { viewModel.setDrawerOpen(true) }
         )
     }
