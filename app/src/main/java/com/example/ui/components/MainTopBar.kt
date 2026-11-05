@@ -58,51 +58,85 @@ private fun ThemeDropdown(
     themeMode: AppThemeMode,
     isDark: Boolean
 ) {
-    DropdownMenu(
-        expanded = expanded,
+    if (!expanded) return
+    val bg = if (isDark) Color.Black else LightDisplaySurface
+    val textColor = if (isDark) TextPrimary else LightTextPrimary
+
+    // A full page for choosing the theme, opened from the palette button
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.background(if (isDark) AmoledDisplaySurface else LightDisplaySurface)
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = "لایت مود",
-                    color = if (isDark) TextPrimary else LightTextPrimary
-                )
-            },
-            leadingIcon = {
-                Icon(Icons.Default.LightMode, contentDescription = null, tint = PurpleSecondary)
-            },
-            trailingIcon = {
-                if (themeMode == AppThemeMode.LIGHT) {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("theme_page"),
+            color = bg
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.systemBars)
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onDismiss, modifier = Modifier.testTag("theme_page_back")) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "بازگشت", tint = textColor)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "انتخاب تم",
+                        color = textColor,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            },
-            onClick = {
-                viewModel.setThemeMode(AppThemeMode.LIGHT)
-                onDismiss()
-            }
-        )
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = "دارک مود امولد",
-                    color = if (isDark) TextPrimary else LightTextPrimary
-                )
-            },
-            leadingIcon = {
-                Icon(Icons.Default.DarkMode, contentDescription = null, tint = PurpleSecondary)
-            },
-            trailingIcon = {
-                if (themeMode == AppThemeMode.AMOLED_DARK) {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+                Spacer(Modifier.height(24.dp))
+                ThemeOptionRow("لایت مود", Icons.Default.LightMode, themeMode == AppThemeMode.LIGHT, textColor) {
+                    viewModel.setThemeMode(AppThemeMode.LIGHT)
+                    onDismiss()
                 }
-            },
-            onClick = {
-                viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
-                onDismiss()
+                Spacer(Modifier.height(12.dp))
+                ThemeOptionRow("دارک مود امولد", Icons.Default.DarkMode, themeMode == AppThemeMode.AMOLED_DARK, textColor) {
+                    viewModel.setThemeMode(AppThemeMode.AMOLED_DARK)
+                    onDismiss()
+                }
             }
-        )
+        }
+    }
+}
+
+@Composable
+private fun ThemeOptionRow(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    textColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) PurplePrimary else textColor.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (selected) {
+            Icon(Icons.Default.Check, contentDescription = null, tint = PurplePrimary)
+        }
+        Spacer(Modifier.weight(1f))
+        Text(title, color = textColor, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.width(12.dp))
+        Icon(icon, contentDescription = null, tint = PurpleSecondary)
     }
 }
 
