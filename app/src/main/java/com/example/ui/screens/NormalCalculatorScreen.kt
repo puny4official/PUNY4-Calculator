@@ -71,6 +71,7 @@ fun NormalCalculatorScreen(
         Toast.makeText(context, "کپی شد: $value", Toast.LENGTH_SHORT).show()
     }
     val displayedResult by viewModel.displayedResult.collectAsState()
+    val previousLine by viewModel.previousLine.collectAsState()
     val resultWordsFa by viewModel.resultWordsFa.collectAsState()
     val isResultError by viewModel.isResultError.collectAsState()
     val angleMode by viewModel.angleMode.collectAsState()
@@ -116,6 +117,18 @@ fun NormalCalculatorScreen(
             ) {
                 val hasResult = displayedResult != null
 
+                // Earlier calculation we continued from, faded at the top (e.g. "1+2= 3")
+                if (!hasResult && previousLine != null) {
+                    AutoSizeText(
+                        text = formatExpressionWithCommas(previousLine!!),
+                        color = secondaryText.copy(alpha = 0.55f),
+                        maxFontSize = 22.sp,
+                        fontWeight = FontWeight.Medium,
+                        testTag = "previous_line_text"
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 // Question: sits at the bottom while typing. After "=" it moves to the top
                 // of the card and stays visible, faded, while the answer is shown below.
                 Box(
@@ -141,6 +154,28 @@ fun NormalCalculatorScreen(
                             fontWeight = FontWeight.SemiBold,
                             testTag = "expression_text",
                             onLongPress = { copyToClipboard(expression) }
+                        )
+                    }
+                }
+
+                // Small live preview of the answer while typing, e.g. "= 2"
+                if (!hasResult) {
+                    val preview = remember(expression, angleMode) {
+                        val hasOp = expression.drop(1).any { it in "+-−×÷*/^%" }
+                        if (!hasOp) null else (
+                            ScientificEngine.evaluate(expression, angleMode)
+                                as? ScientificEngine.EvaluationResult.Success
+                            )?.formatted
+                    }
+                    if (preview != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        AutoSizeText(
+                            text = "= $preview",
+                            color = secondaryText,
+                            maxFontSize = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                            testTag = "preview_text",
+                            referenceText = "= 100,000,000,000,000"
                         )
                     }
                 }
