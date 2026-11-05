@@ -1,6 +1,12 @@
 package com.example
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.example.update.UpdateJobService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -31,6 +37,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Background check for new versions + permission to show its notification
+        UpdateJobService.schedule(applicationContext)
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+                .launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         setContent {
             val themeMode by viewModel.themeMode.collectAsState()
