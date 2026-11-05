@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
+import kotlinx.coroutines.launch
 import com.example.R
 import com.example.ui.ActiveScreen
 import com.example.ui.CalculatorViewModel
@@ -360,9 +361,12 @@ fun HamburgerSideSheet(
                                 viewModel.setScreen(ActiveScreen.STUDIO)
                             }
                         )
+
+                        // 3. Check for update (animated banner)
+                        CheckUpdateItem(isDark = isDark)
                     }
 
-                    // BOTTOM SECTION: App version
+                    // CHECK FOR UPDATE and BOTTOM SECTION: App version
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -419,5 +423,105 @@ fun DrawerMenuItem(
             fontSize = 13.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
+    }
+}
+
+
+private sealed class UpdateStatus {
+    object Idle : UpdateStatus()
+    object Checking : UpdateStatus()
+    object UpToDate : UpdateStatus()
+    class Available(val version: String) : UpdateStatus()
+    object Failed : UpdateStatus()
+}
+
+/** The animated "check update" banner: tapping it checks whether a newer version exists. */
+@Composable
+private fun CheckUpdateItem(isDark: Boolean) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf<UpdateStatus>(UpdateStatus.Idle) }
+    val textColor = if (isDark) TextPrimary else LightTextPrimary
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val checkNow: () -> Unit = {
+            if (status != UpdateStatus.Checking) {
+                status = UpdateStatus.Checking
+                scope.launch {
+                    val latest = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        com.example.update.UpdateChecker.fetchLatestVersion()
+                    }
+                    status = when {
+                        latest == null -> UpdateStatus.Failed
+                        com.example.update.UpdateChecker.isNewer(latest, BuildConfig.VERSION_NAME) ->
+                            UpdateStatus.Available(latest)
+                        else -> UpdateStatus.UpToDate
+                    }
+                }
+            }
+        }
+        Box(modifier = Modifier.fillMaxWidth().aspectRatio(640f / 152f)) {
+            androidx.compose.ui.viewinterop.AndroidView(
+                factory = { ctx ->
+                    android.widget.VideoView(ctx).apply {
+                        setVideoURI(
+                            android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.check_update}")
+                        )
+                        setOnPreparedListener { player ->
+                            player.isLooping = true
+                            player.setVolume(0f, 0f)
+                            start()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+            // Transparent layer over the video that receives the taps
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(onClickLabel = "بررسی به‌روزرسانی", onClick = checkNow)
+                    .semantics { contentDescription = "بررسی به‌روزرسانی" }
+                    .testTag("check_update_banner")
+            )
+        }
+
+        val message = when (val s = status) {
+            UpdateStatus.Idle -> null
+            UpdateStatus.Checking -> "در حال بررسی…"
+            UpdateStatus.UpToDate -> "شما به‌روز هستید ✓"
+            is UpdateStatus.Available -> "نسخه جدید ${s.version} آماده است"
+            UpdateStatus.Failed -> "بررسی انجام نشد. اتصال اینترنت را چک کنید."
+        }
+        if (message != null) {
+            Text(
+                text = message,
+                color = textColor,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("update_status_text")
+            )
+        }
+        if (status is UpdateStatus.Available) {
+            TextButton(
+                onClick = {
+                    context.startActivity(
+                        android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse(com.example.update.UpdateChecker.REPO_URL)
+                        ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("باز کردن صفحه‌ی دانلود", color = PurpleSecondary, fontSize = 13.sp)
+            }
+        }
     }
 }
