@@ -49,6 +49,10 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     private val _displayedResult = MutableStateFlow<String?>(null)
     val displayedResult: StateFlow<String?> = _displayedResult.asStateFlow()
 
+    // Finished calculation kept faded at the top while continuing from its result, e.g. "1+2= 3"
+    private val _previousLine = MutableStateFlow<String?>(null)
+    val previousLine: StateFlow<String?> = _previousLine.asStateFlow()
+
     private val _resultWordsFa = MutableStateFlow<String?>(null)
     val resultWordsFa: StateFlow<String?> = _resultWordsFa.asStateFlow()
 
@@ -114,6 +118,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         if (_displayedResult.value != null && isDigitOrDecimal(char)) {
             _expression.value = char
             _displayedResult.value = null
+            _previousLine.value = null
             _resultWordsFa.value = null
             _isResultError.value = false
             return
@@ -122,6 +127,9 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         // If starting an operator after result, continue expression
         if (_displayedResult.value != null && isOperator(char)) {
             val resClean = _displayedResult.value!!.replace(",", "")
+            if (!_isResultError.value) {
+                _previousLine.value = "${_expression.value}= ${_displayedResult.value}"
+            }
             _expression.value = resClean + char
             _displayedResult.value = null
             _resultWordsFa.value = null
@@ -215,6 +223,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun onClear() {
+        _previousLine.value = null
         _expression.value = "0"
         _displayedResult.value = null
         _resultWordsFa.value = null
@@ -223,6 +232,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onCalculate() {
         val expr = _expression.value
+        _previousLine.value = null
         val result = ScientificEngine.evaluate(expr, _angleMode.value)
         when (result) {
             is ScientificEngine.EvaluationResult.Success -> {
