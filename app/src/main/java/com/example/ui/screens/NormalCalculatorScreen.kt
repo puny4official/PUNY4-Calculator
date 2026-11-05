@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -431,7 +432,7 @@ private fun AutoSizeText(
         fun styleAt(fontSizeSp: Float) = TextStyle(
             fontSize = fontSizeSp.sp,
             fontWeight = fontWeight,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = SevenSegmentFont,
             letterSpacing = 0.sp,
             lineHeight = (fontSizeSp * 1.2f).sp,
             textDirection = TextDirection.Ltr
@@ -623,3 +624,6 @@ fun CalcMiniButton(
     }
 }
 
+
+/** Digital (seven-segment) font used for the numbers on the display. */
+private val SevenSegmentFont = FontFamily(Font(R.font.seven_segment))
