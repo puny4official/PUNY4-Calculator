@@ -290,7 +290,10 @@ fun NormalCalculatorScreen(
                     .testTag("key_return_to_expression")
             )
 
-            GlassKeypad(viewModel = viewModel, isDark = isDark)
+            // "C" clears the question only. Once it is cleared and an earlier line is still
+            // kept at the top, the key turns into "AC", which clears everything.
+            val isAllClear = expression == "0" && displayedResult == null && previousLine != null
+            GlassKeypad(viewModel = viewModel, isDark = isDark, isAllClear = isAllClear)
         }
     }
 }
@@ -307,7 +310,7 @@ private fun glassInput(symbol: String, description: String = symbol) =
 
 private val glassKeyRows: List<List<GlassKey>> = listOf(
     listOf(
-        GlassKey("key_AC", "پاک کردن همه") { it.onClear() },
+        GlassKey("key_AC", "پاک کردن") { it.onClear() },
         GlassKey("key_backspace", "حذف") { it.onBackspace() },
         GlassKey("key_toggle_sign", "تغییر علامت") { it.onToggleSign() },
         glassInput("÷", "تقسیم")
@@ -356,7 +359,7 @@ private val darkKeypadImage = KeypadImage(
  * with an invisible grid of tap areas on top, one over each button of the image.
  */
 @Composable
-private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean) {
+private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllClear: Boolean) {
     val keypad = if (isDark) darkKeypadImage else lightKeypadImage
 
     BoxWithConstraints(
@@ -388,15 +391,34 @@ private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean) {
                         .weight(keypad.rowEdges[rowIndex + 1] - keypad.rowEdges[rowIndex])
                 ) {
                     row.forEachIndexed { columnIndex, key ->
+                        val isClearKey = rowIndex == 0 && columnIndex == 0
                         Box(
                             modifier = Modifier
                                 .weight(keypad.columnEdges[columnIndex + 1] - keypad.columnEdges[columnIndex])
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(22.dp))
-                                .clickable(onClickLabel = key.description) { key.action(viewModel) }
-                                .semantics { contentDescription = key.description }
+                                .clickable(onClickLabel = key.description) {
+                                    if (isClearKey && isAllClear) viewModel.onClearAll()
+                                    else key.action(viewModel)
+                                }
+                                .semantics {
+                                    contentDescription =
+                                        if (isClearKey && isAllClear) "پاک کردن همه" else key.description
+                                }
                                 .testTag(key.tag)
-                        )
+                        ) {
+                            // The keypad picture shows "AC"; by default the key reads "C"
+                            if (isClearKey && !isAllClear) {
+                                Image(
+                                    painter = painterResource(
+                                        id = if (isDark) R.drawable.key_c_dark else R.drawable.key_c_light
+                                    ),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
                     }
                 }
             }
