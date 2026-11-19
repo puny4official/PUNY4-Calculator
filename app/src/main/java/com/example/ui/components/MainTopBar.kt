@@ -141,9 +141,6 @@ private fun ThemeOptionRow(
     }
 }
 
-// Both top bar images were cropped to the same size, with the buttons at the same height
-private const val TOP_BAR_IMAGE_WIDTH = 2172f
-private const val TOP_BAR_IMAGE_HEIGHT = 260f
 
 /**
  * A top bar picture and the horizontal span (in image pixels) of its four buttons:
@@ -151,6 +148,8 @@ private const val TOP_BAR_IMAGE_HEIGHT = 260f
  */
 private class TopBarImage(
     val resId: Int,
+    val width: Float,
+    val height: Float,
     val history: ClosedFloatingPointRange<Float>,
     val scope: ClosedFloatingPointRange<Float>,
     val theme: ClosedFloatingPointRange<Float>,
@@ -159,6 +158,8 @@ private class TopBarImage(
 
 private val lightTopBarImage = TopBarImage(
     resId = R.drawable.top_bar_glass,
+    width = 2172f,
+    height = 260f,
     history = 63f..286f,
     scope = 308f..530f,
     theme = 544f..765f,
@@ -167,10 +168,12 @@ private val lightTopBarImage = TopBarImage(
 
 private val darkTopBarImage = TopBarImage(
     resId = R.drawable.top_bar_glass_dark,
-    history = 62f..286f,
-    scope = 310f..525f,
-    theme = 547f..761f,
-    menu = 1967f..2168f
+    width = 841f,
+    height = 108f,
+    history = 29f..106f,
+    scope = 123f..199f,
+    theme = 216f..292f,
+    menu = 749f..832f
 )
 
 /**
@@ -191,7 +194,7 @@ private fun GlassTopBar(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .aspectRatio(TOP_BAR_IMAGE_WIDTH / TOP_BAR_IMAGE_HEIGHT)
+            .aspectRatio(bar.width / bar.height)
     ) {
         Image(
             painter = painterResource(id = bar.resId),
@@ -210,8 +213,8 @@ private fun GlassTopBar(
         ) {
             Box(
                 modifier = Modifier
-                    .offset(x = maxWidth * (span.start / TOP_BAR_IMAGE_WIDTH))
-                    .width(maxWidth * ((span.endInclusive - span.start) / TOP_BAR_IMAGE_WIDTH))
+                    .offset(x = maxWidth * (span.start / bar.width))
+                    .width(maxWidth * ((span.endInclusive - span.start) / bar.width))
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(18.dp))
                     .clickable(role = Role.Button, onClick = onClick)
