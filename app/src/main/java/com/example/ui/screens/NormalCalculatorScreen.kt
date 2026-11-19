@@ -82,8 +82,8 @@ fun NormalCalculatorScreen(
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
 
     // Theme adaptive colors
-    val displayBg = if (isDark) AmoledDisplaySurface else LightDisplaySurface
-    val displayBorder = if (isDark) BlackBorder else LightBorder
+    val displayBg = if (isDark) Color(0xFF020307) else LightDisplaySurface
+    val displayBorder = if (isDark) Color(0xFF373641) else LightBorder
     val primaryText = if (isDark) TextPrimary else LightTextPrimary
     val secondaryText = if (isDark) TextSecondary else LightTextSecondary
     val keyNumberBg = if (isDark) AmoledKeyNumberBg else LightKeyNumberBg
@@ -106,7 +106,7 @@ fun NormalCalculatorScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(bottom = 8.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(if (isDark) 18.dp else 24.dp),
             colors = CardDefaults.cardColors(containerColor = displayBg),
             border = androidx.compose.foundation.BorderStroke(1.dp, displayBorder)
         ) {
@@ -348,10 +348,11 @@ private val lightKeypadImage = KeypadImage(
 
 private val darkKeypadImage = KeypadImage(
     resId = R.drawable.keypad_glass_dark,
-    width = 1670f,
-    height = 941f,
-    columnEdges = listOf(48f, 438.5f, 832.5f, 1227.5f, 1618f),
-    rowEdges = listOf(22f, 223f, 410f, 596.5f, 768.5f, 927f)
+    width = 784f,
+    height = 570f,
+    columnEdges = listOf(12f, 205.5f, 394.5f, 584f, 773f),
+    rowEdges = listOf(10f, 119.5f, 229.5f, 339f, 451f, 557f)
+)
 )
 
 /**
