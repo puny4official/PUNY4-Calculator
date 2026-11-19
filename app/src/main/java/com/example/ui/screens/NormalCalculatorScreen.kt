@@ -348,10 +348,10 @@ private val lightKeypadImage = KeypadImage(
 
 private val darkKeypadImage = KeypadImage(
     resId = R.drawable.keypad_glass_dark,
-    width = 784f,
-    height = 570f,
-    columnEdges = listOf(12f, 205.5f, 394.5f, 584f, 773f),
-    rowEdges = listOf(10f, 119.5f, 229.5f, 339f, 451f, 557f)
+    width = 841f,
+    height = 618f,
+    columnEdges = listOf(26f, 226.9f, 423.1f, 619.8f, 816f),
+    rowEdges = listOf(11f, 130.9f, 251.4f, 371.3f, 493.9f, 610f)
 )
 )
 
