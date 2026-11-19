@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -298,129 +300,195 @@ fun NormalCalculatorScreen(
     }
 }
 
-/** One tappable key placed over a button of the glass keypad image. */
+private enum class KeyKind { NUMBER, OPERATOR, CLEAR, EQUAL }
+
+/** One key of the keypad. Either [label] or [icon] is drawn on the button. */
 private class GlassKey(
     val tag: String,
     val description: String,
+    val kind: KeyKind,
+    val label: String? = null,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     val action: (CalculatorViewModel) -> Unit
 )
 
-private fun glassInput(symbol: String, description: String = symbol) =
-    GlassKey("key_$symbol", description) { it.onInput(symbol) }
+private fun glassInput(symbol: String, kind: KeyKind, description: String = symbol) =
+    GlassKey("key_$symbol", description, kind, label = symbol) { it.onInput(symbol) }
 
 private val glassKeyRows: List<List<GlassKey>> = listOf(
     listOf(
-        GlassKey("key_AC", "پاک کردن") { it.onClear() },
-        GlassKey("key_backspace", "حذف") { it.onBackspace() },
-        GlassKey("key_toggle_sign", "تغییر علامت") { it.onToggleSign() },
-        glassInput("÷", "تقسیم")
+        GlassKey("key_AC", "پاک کردن", KeyKind.CLEAR, label = "C") { it.onClear() },
+        GlassKey("key_backspace", "حذف", KeyKind.CLEAR, icon = Icons.Default.Backspace) { it.onBackspace() },
+        GlassKey("key_toggle_sign", "تغییر علامت", KeyKind.OPERATOR, label = "+/−") { it.onToggleSign() },
+        glassInput("÷", KeyKind.OPERATOR, "تقسیم")
     ),
-    listOf(glassInput("7"), glassInput("8"), glassInput("9"), glassInput("×", "ضرب")),
-    listOf(glassInput("4"), glassInput("5"), glassInput("6"), glassInput("−", "تفریق")),
-    listOf(glassInput("1"), glassInput("2"), glassInput("3"), glassInput("+", "جمع")),
     listOf(
-        glassInput(".", "ممیز"),
-        glassInput("0"),
-        glassInput("%", "درصد"),
-        GlassKey("key_=", "مساوی") { it.onCalculate() }
+        glassInput("7", KeyKind.NUMBER), glassInput("8", KeyKind.NUMBER),
+        glassInput("9", KeyKind.NUMBER), glassInput("×", KeyKind.OPERATOR, "ضرب")
+    ),
+    listOf(
+        glassInput("4", KeyKind.NUMBER), glassInput("5", KeyKind.NUMBER),
+        glassInput("6", KeyKind.NUMBER), glassInput("−", KeyKind.OPERATOR, "تفریق")
+    ),
+    listOf(
+        glassInput("1", KeyKind.NUMBER), glassInput("2", KeyKind.NUMBER),
+        glassInput("3", KeyKind.NUMBER), glassInput("+", KeyKind.OPERATOR, "جمع")
+    ),
+    listOf(
+        glassInput(".", KeyKind.NUMBER, "ممیز"),
+        glassInput("0", KeyKind.NUMBER),
+        glassInput("%", KeyKind.OPERATOR, "درصد"),
+        GlassKey("key_=", "مساوی", KeyKind.EQUAL, label = "=") { it.onCalculate() }
     )
 )
 
+/** Width / height of every key. Same in light and dark mode. */
+private const val KEY_ASPECT_RATIO = 1.66f
+
+/** Colours of a glass key: three fill stops (top to bottom), border, text and glow. */
+private class GlassKeyColors(
+    val fill: List<Color>,
+    val border: Color,
+    val text: Color,
+    val glow: Color?
+)
+
+private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if (isDark) {
+    when (kind) {
+        KeyKind.NUMBER -> GlassKeyColors(
+            listOf(Color(0xFF3A3548), Color(0xFF1A1724), Color(0xFF0E0C16)),
+            Color(0xFFB9B3CC).copy(alpha = 0.40f), Color(0xFFFFFFFF), null
+        )
+        KeyKind.OPERATOR -> GlassKeyColors(
+            listOf(Color(0xFF3E5A4C), Color(0xFF1C2B24), Color(0xFF101A15)),
+            Color(0xFF9CD8B4).copy(alpha = 0.45f), Color(0xFF8A1FFF), null
+        )
+        KeyKind.CLEAR -> GlassKeyColors(
+            listOf(Color(0xFF5A1230), Color(0xFF2A0A18), Color(0xFF140610)),
+            Color(0xFFFF7BA3).copy(alpha = 0.40f), Color(0xFFE8113F), null
+        )
+        KeyKind.EQUAL -> GlassKeyColors(
+            listOf(Color(0xFF3DBE5E), Color(0xFF1E8E3C), Color(0xFF0E6B28)),
+            Color(0xFF7BE39A).copy(alpha = 0.70f), Color(0xFFFFFFFF), Color(0xFF22C55E)
+        )
+    }
+} else {
+    when (kind) {
+        KeyKind.NUMBER -> GlassKeyColors(
+            listOf(Color(0xFFFFFFFF), Color(0xFFFDFBFF), Color(0xFFF4F2FA)),
+            Color(0xFFE6E2EF), LightKeyNumberText, null
+        )
+        KeyKind.OPERATOR -> GlassKeyColors(
+            listOf(Color(0xFFFAFFFC), Color(0xFFEFF8F2), Color(0xFFE8F2EC)),
+            Color(0xFFDDEBE2), LightKeyOperatorText, null
+        )
+        KeyKind.CLEAR -> GlassKeyColors(
+            listOf(Color(0xFFFFFAFC), Color(0xFFFFF0F5), Color(0xFFF8E6ED)),
+            Color(0xFFF2DCE5), LightKeyClearText, null
+        )
+        KeyKind.EQUAL -> GlassKeyColors(
+            listOf(Color(0xFF35B85F), Color(0xFF16A34A), Color(0xFF0D873C)),
+            Color(0xFF79D494), Color(0xFFFFFFFF), Color(0xFF188F43)
+        )
+    }
+}
+
+/** A single glass-style pill key, drawn in code (no pictures). */
+@Composable
+private fun GlassKeyButton(
+    key: GlassKey,
+    label: String?,
+    description: String,
+    isDark: Boolean,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
+    val colors = glassKeyColors(key.kind, isDark)
+    val shape = RoundedCornerShape(percent = 50)
+    Box(
+        modifier = modifier
+            .aspectRatio(KEY_ASPECT_RATIO)
+            .shadow(
+                elevation = if (colors.glow != null) 8.dp else if (isDark) 0.dp else 4.dp,
+                shape = shape,
+                clip = false,
+                ambientColor = colors.glow ?: Color(0xFF6A6480).copy(alpha = 0.30f),
+                spotColor = colors.glow ?: Color(0xFF6A6480).copy(alpha = 0.30f)
+            )
+            .clip(shape)
+            .background(Brush.verticalGradient(colors.fill))
+            .drawBehind {
+                // soft light reflection in the top-left corner, like glass
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.22f else 0.55f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.22f, size.height * 0.12f),
+                        radius = size.width * 0.42f
+                    )
+                )
+            }
+            .border(
+                1.dp,
+                Brush.verticalGradient(listOf(colors.border, colors.border.copy(alpha = colors.border.alpha * 0.35f))),
+                shape
+            )
+            .clickable(onClickLabel = description, onClick = onClick)
+            .semantics { contentDescription = description }
+            .testTag(key.tag),
+        contentAlignment = Alignment.Center
+    ) {
+        if (key.icon != null) {
+            Icon(
+                imageVector = key.icon,
+                contentDescription = null,
+                tint = colors.text,
+                modifier = Modifier.size(28.dp)
+            )
+        } else {
+            Text(
+                text = label ?: "",
+                color = colors.text,
+                fontSize = if ((label?.length ?: 0) > 1) 22.sp else 28.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
+        }
+    }
+}
+
 /**
- * A keypad picture together with where its buttons are (in image pixels):
- * the boundaries between the 4 columns and between the 5 rows (outer edges included).
- */
-private class KeypadImage(
-    val resId: Int,
-    val width: Float,
-    val height: Float,
-    val columnEdges: List<Float>,
-    val rowEdges: List<Float>
-)
-
-private val lightKeypadImage = KeypadImage(
-    resId = R.drawable.keypad_glass,
-    width = 841f,
-    height = 618f,
-    columnEdges = listOf(26f, 220.5f, 419.5f, 618f, 816f),
-    rowEdges = listOf(11f, 128f, 245.5f, 364.5f, 483.5f, 610f)
-)
-
-private val darkKeypadImage = KeypadImage(
-    resId = R.drawable.keypad_glass_dark,
-    width = 841f,
-    height = 618f,
-    columnEdges = listOf(26f, 226.9f, 423.1f, 619.8f, 816f),
-    rowEdges = listOf(11f, 130.9f, 251.4f, 371.3f, 493.9f, 610f)
-)
-)
-
-/**
- * The keypad drawn by the supplied image for the current theme (shown exactly as it is)
- * with an invisible grid of tap areas on top, one over each button of the image.
+ * The keypad, drawn in code. Every key has the same size in light and dark mode;
+ * only the colours change with the theme.
  */
 @Composable
 private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllClear: Boolean) {
-    val keypad = if (isDark) darkKeypadImage else lightKeypadImage
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(keypad.width / keypad.height)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Image(
-            painter = painterResource(id = keypad.resId),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    start = maxWidth * (keypad.columnEdges.first() / keypad.width),
-                    end = maxWidth * ((keypad.width - keypad.columnEdges.last()) / keypad.width),
-                    top = maxHeight * (keypad.rowEdges.first() / keypad.height),
-                    bottom = maxHeight * ((keypad.height - keypad.rowEdges.last()) / keypad.height)
-                )
-        ) {
-            glassKeyRows.forEachIndexed { rowIndex, row ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(keypad.rowEdges[rowIndex + 1] - keypad.rowEdges[rowIndex])
-                ) {
-                    row.forEachIndexed { columnIndex, key ->
-                        val isClearKey = rowIndex == 0 && columnIndex == 0
-                        Box(
-                            modifier = Modifier
-                                .weight(keypad.columnEdges[columnIndex + 1] - keypad.columnEdges[columnIndex])
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(22.dp))
-                                .clickable(onClickLabel = key.description) {
-                                    if (isClearKey && isAllClear) viewModel.onClearAll()
-                                    else key.action(viewModel)
-                                }
-                                .semantics {
-                                    contentDescription =
-                                        if (isClearKey && isAllClear) "پاک کردن همه" else key.description
-                                }
-                                .testTag(key.tag)
-                        ) {
-                            // The keypad picture shows "AC"; by default the key reads "C"
-                            if (isClearKey && !isAllClear) {
-                                Image(
-                                    painter = painterResource(
-                                        id = if (isDark) R.drawable.key_c_dark else R.drawable.key_c_light
-                                    ),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
+        glassKeyRows.forEachIndexed { rowIndex, row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row.forEachIndexed { columnIndex, key ->
+                    val isClearKey = rowIndex == 0 && columnIndex == 0
+                    // "C" clears the question; once cleared it turns into "AC" (clears everything)
+                    val label = if (isClearKey && isAllClear) "AC" else key.label
+                    val description = if (isClearKey && isAllClear) "پاک کردن همه" else key.description
+                    GlassKeyButton(
+                        key = key,
+                        label = label,
+                        description = description,
+                        isDark = isDark,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            if (isClearKey && isAllClear) viewModel.onClearAll() else key.action(viewModel)
                         }
-                    }
+                    )
                 }
             }
         }
