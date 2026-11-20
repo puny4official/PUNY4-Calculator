@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -356,24 +357,35 @@ private class GlassKeyColors(
     val glow: Color?
 )
 
+/** The green of the operator and equal keys (same in light and dark mode). */
+private val KeyGreen = Color(0xFF24811D)
+
+private fun operatorGlassColors() = GlassKeyColors(
+    fill = listOf(lerp(KeyGreen, Color.White, 0.22f), KeyGreen, lerp(KeyGreen, Color.Black, 0.28f)),
+    border = lerp(KeyGreen, Color.White, 0.55f).copy(alpha = 0.85f),
+    text = Color.White,
+    glow = null
+)
+
+private fun equalGlassColors() = GlassKeyColors(
+    fill = listOf(lerp(KeyGreen, Color.White, 0.38f), lerp(KeyGreen, Color.White, 0.10f), lerp(KeyGreen, Color.Black, 0.22f)),
+    border = lerp(KeyGreen, Color.White, 0.65f).copy(alpha = 0.9f),
+    text = Color.White,
+    glow = KeyGreen
+)
+
 private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if (isDark) {
     when (kind) {
         KeyKind.NUMBER -> GlassKeyColors(
             listOf(Color(0xFF3A3548), Color(0xFF1A1724), Color(0xFF0E0C16)),
             Color(0xFFB9B3CC).copy(alpha = 0.40f), Color(0xFFFFFFFF), null
         )
-        KeyKind.OPERATOR -> GlassKeyColors(
-            listOf(Color(0xFF3E5A4C), Color(0xFF1C2B24), Color(0xFF101A15)),
-            Color(0xFF9CD8B4).copy(alpha = 0.45f), Color(0xFF8A1FFF), null
-        )
+        KeyKind.OPERATOR -> operatorGlassColors()
         KeyKind.CLEAR -> GlassKeyColors(
             listOf(Color(0xFF5A1230), Color(0xFF2A0A18), Color(0xFF140610)),
             Color(0xFFFF7BA3).copy(alpha = 0.40f), Color(0xFFE8113F), null
         )
-        KeyKind.EQUAL -> GlassKeyColors(
-            listOf(Color(0xFF3DBE5E), Color(0xFF1E8E3C), Color(0xFF0E6B28)),
-            Color(0xFF7BE39A).copy(alpha = 0.70f), Color(0xFFFFFFFF), Color(0xFF22C55E)
-        )
+        KeyKind.EQUAL -> equalGlassColors()
     }
 } else {
     when (kind) {
@@ -381,18 +393,12 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
             listOf(Color(0xFFF1F2F6), Color(0xFFE3E5EC), Color(0xFFD5D8E1)),
             Color(0xFFB9BECC), LightKeyNumberText, null
         )
-        KeyKind.OPERATOR -> GlassKeyColors(
-            listOf(Color(0xFFE9F0EC), Color(0xFFDBE5DF), Color(0xFFCCD8D1)),
-            Color(0xFFAEC2B7), LightKeyOperatorText, null
-        )
+        KeyKind.OPERATOR -> operatorGlassColors()
         KeyKind.CLEAR -> GlassKeyColors(
             listOf(Color(0xFFF3E8ED), Color(0xFFE8D8DF), Color(0xFFDCC8D2)),
             Color(0xFFC9A9B8), LightKeyClearText, null
         )
-        KeyKind.EQUAL -> GlassKeyColors(
-            listOf(Color(0xFF35B85F), Color(0xFF16A34A), Color(0xFF0D873C)),
-            Color(0xFF79D494), Color(0xFFFFFFFF), Color(0xFF188F43)
-        )
+        KeyKind.EQUAL -> equalGlassColors()
     }
 }
 
