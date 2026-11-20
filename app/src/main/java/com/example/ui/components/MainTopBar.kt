@@ -157,7 +157,7 @@ private fun topBarGlass(isDark: Boolean) = if (isDark) {
     LiquidGlassStyle(
         fill = listOf(Color(0xFFFFE4EF), Color(0xFFFBCADE), Color(0xFFF6B3D0)),
         border = Color(0xFFF08CB8).copy(alpha = 0.9f),
-        glow = null
+        glow = Color(0xFFF06AA8)
     )
 }
 
@@ -173,8 +173,8 @@ private fun GlassIconButton(
 ) {
     Box(
         modifier = Modifier
-            .size(46.dp)
-            .liquidGlass(topBarGlass(isDark), isDark, pill = false, corner = 15.dp)
+            .size(48.dp)
+            .liquidGlass(topBarGlass(isDark), isDark, pill = false, corner = 18.dp)
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description }
             .testTag(tag),
