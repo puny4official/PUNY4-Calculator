@@ -11,6 +11,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -142,44 +147,49 @@ private fun ThemeOptionRow(
 }
 
 
-/**
- * A top bar picture and the horizontal span (in image pixels) of its four buttons:
- * history, scope (info), theme (palette) and menu (hamburger).
- */
-private class TopBarImage(
-    val resId: Int,
-    val width: Float,
-    val height: Float,
-    val history: ClosedFloatingPointRange<Float>,
-    val scope: ClosedFloatingPointRange<Float>,
-    val theme: ClosedFloatingPointRange<Float>,
-    val menu: ClosedFloatingPointRange<Float>
-)
+private fun topBarGlass(isDark: Boolean) = if (isDark) {
+    LiquidGlassStyle(
+        fill = listOf(Color(0xFF4A1040), Color(0xFF2A0A2A), Color(0xFF160515)),
+        border = Color(0xFFFF3DB8).copy(alpha = 0.85f),
+        glow = Color(0xFFFF2DAA)
+    )
+} else {
+    LiquidGlassStyle(
+        fill = listOf(Color(0xFFFFE4EF), Color(0xFFFBCADE), Color(0xFFF6B3D0)),
+        border = Color(0xFFF08CB8).copy(alpha = 0.9f),
+        glow = null
+    )
+}
 
-private val lightTopBarImage = TopBarImage(
-    resId = R.drawable.top_bar_glass,
-    width = 2172f,
-    height = 260f,
-    history = 63f..286f,
-    scope = 308f..530f,
-    theme = 544f..765f,
-    menu = 1936f..2146f
-)
+/** One square liquid-glass icon button of the top bar. */
+@Composable
+private fun GlassIconButton(
+    icon: ImageVector,
+    tag: String,
+    description: String,
+    isDark: Boolean,
+    onClick: () -> Unit,
+    content: @Composable BoxScope.() -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .liquidGlass(topBarGlass(isDark), isDark, pill = false, corner = 15.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description }
+            .testTag(tag),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isDark) Color(0xFFFF6FCF) else Color(0xFFD81B77),
+            modifier = Modifier.size(24.dp)
+        )
+        content()
+    }
+}
 
-private val darkTopBarImage = TopBarImage(
-    resId = R.drawable.top_bar_glass_dark,
-    width = 841f,
-    height = 108f,
-    history = 29f..106f,
-    scope = 123f..199f,
-    theme = 216f..292f,
-    menu = 749f..832f
-)
-
-/**
- * The top bar: the supplied image for the current theme (shown exactly as it is) with an
- * invisible tap area over each of its four buttons.
- */
 @Composable
 private fun GlassTopBar(
     viewModel: CalculatorViewModel,
@@ -188,52 +198,26 @@ private fun GlassTopBar(
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     var themeMenuOpen by remember { mutableStateOf(false) }
-    val bar = if (isDark) darkTopBarImage else lightTopBarImage
 
-    BoxWithConstraints(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .aspectRatio(bar.width / bar.height)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = bar.resId),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        @Composable
-        fun TapArea(
-            span: ClosedFloatingPointRange<Float>,
-            tag: String,
-            description: String,
-            onClick: () -> Unit,
-            content: @Composable BoxScope.() -> Unit = {}
-        ) {
-            Box(
-                modifier = Modifier
-                    .offset(x = maxWidth * (span.start / bar.width))
-                    .width(maxWidth * ((span.endInclusive - span.start) / bar.width))
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable(role = Role.Button, onClick = onClick)
-                    .semantics { contentDescription = description }
-                    .testTag(tag),
-                content = content
-            )
-        }
-
-        TapArea(
-            bar.history, "top_bar_history_button", "تاریخچه",
+        GlassIconButton(
+            Icons.Default.History, "top_bar_history_button", "تاریخچه", isDark,
             onClick = { viewModel.setHistoryOpen(true) }
         )
-        TapArea(
-            bar.scope, "top_bar_scope_button", "دامنه و راهنما",
+        Spacer(Modifier.width(10.dp))
+        GlassIconButton(
+            Icons.Default.Info, "top_bar_scope_button", "دامنه و راهنما", isDark,
             onClick = { viewModel.setScopeOpen(true) }
         )
-        TapArea(
-            bar.theme, "top_bar_theme_button", "ظاهر",
+        Spacer(Modifier.width(10.dp))
+        GlassIconButton(
+            Icons.Default.Palette, "top_bar_theme_button", "ظاهر", isDark,
             onClick = { themeMenuOpen = true }
         ) {
             ThemeDropdown(
@@ -244,8 +228,17 @@ private fun GlassTopBar(
                 isDark = isDark
             )
         }
-        TapArea(
-            bar.menu, "top_bar_hamburger_button", "منو",
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = "PUNY4 Calculator",
+            color = if (isDark) Color.White else LightTextPrimary,
+            fontSize = 19.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
+        )
+        Spacer(Modifier.width(12.dp))
+        GlassIconButton(
+            Icons.Default.Menu, "top_bar_hamburger_button", "منو", isDark,
             onClick = { viewModel.setDrawerOpen(true) }
         )
     }

@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.math.calculator.ScientificEngine
 import com.example.ui.CalculatorViewModel
+import com.example.ui.components.LiquidGlassStyle
+import com.example.ui.components.liquidGlass
 import com.example.ui.theme.*
 
 @Composable
@@ -376,16 +378,16 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
 } else {
     when (kind) {
         KeyKind.NUMBER -> GlassKeyColors(
-            listOf(Color(0xFFFFFFFF), Color(0xFFFDFBFF), Color(0xFFF4F2FA)),
-            Color(0xFFE6E2EF), LightKeyNumberText, null
+            listOf(Color(0xFFF1F2F6), Color(0xFFE3E5EC), Color(0xFFD5D8E1)),
+            Color(0xFFB9BECC), LightKeyNumberText, null
         )
         KeyKind.OPERATOR -> GlassKeyColors(
-            listOf(Color(0xFFFAFFFC), Color(0xFFEFF8F2), Color(0xFFE8F2EC)),
-            Color(0xFFDDEBE2), LightKeyOperatorText, null
+            listOf(Color(0xFFE9F0EC), Color(0xFFDBE5DF), Color(0xFFCCD8D1)),
+            Color(0xFFAEC2B7), LightKeyOperatorText, null
         )
         KeyKind.CLEAR -> GlassKeyColors(
-            listOf(Color(0xFFFFFAFC), Color(0xFFFFF0F5), Color(0xFFF8E6ED)),
-            Color(0xFFF2DCE5), LightKeyClearText, null
+            listOf(Color(0xFFF3E8ED), Color(0xFFE8D8DF), Color(0xFFDCC8D2)),
+            Color(0xFFC9A9B8), LightKeyClearText, null
         )
         KeyKind.EQUAL -> GlassKeyColors(
             listOf(Color(0xFF35B85F), Color(0xFF16A34A), Color(0xFF0D873C)),
@@ -394,7 +396,7 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
     }
 }
 
-/** A single glass-style pill key, drawn in code (no pictures). */
+/** A single liquid-glass pill key, drawn in code (no pictures). */
 @Composable
 private fun GlassKeyButton(
     key: GlassKey,
@@ -405,87 +407,10 @@ private fun GlassKeyButton(
     onClick: () -> Unit
 ) {
     val colors = glassKeyColors(key.kind, isDark)
-    val shape = RoundedCornerShape(percent = 50)
-    val shadowTint = colors.glow ?: (if (isDark) Color(0xFF000000) else Color(0xFF6A6480))
     Box(
         modifier = modifier
             .aspectRatio(KEY_ASPECT_RATIO)
-            .shadow(
-                elevation = if (colors.glow != null) 10.dp else if (isDark) 0.dp else 6.dp,
-                shape = shape,
-                clip = false,
-                ambientColor = shadowTint.copy(alpha = 0.45f),
-                spotColor = shadowTint.copy(alpha = 0.45f)
-            )
-            .clip(shape)
-            // translucent tinted body of the glass
-            .background(Brush.verticalGradient(colors.fill.map { it.copy(alpha = if (isDark) 0.78f else 0.88f) }))
-            .drawBehind {
-                val w = size.width
-                val h = size.height
-                val px = 1.dp.toPx()
-                val tint = colors.fill[0]
-
-                // light collected along the bottom edge (glass refracts light to the lower rim)
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0.55f to Color.Transparent,
-                        1f to tint.copy(alpha = 0.55f).compositeOver(Color.White.copy(alpha = if (isDark) 0.10f else 0.0f))
-                    )
-                )
-                // curved gloss band on the upper half
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color.White.copy(alpha = if (isDark) 0.34f else 0.75f),
-                            Color.White.copy(alpha = if (isDark) 0.04f else 0.10f)
-                        ),
-                        startY = 3 * px,
-                        endY = h * 0.52f
-                    ),
-                    topLeft = Offset(h * 0.16f, 3 * px),
-                    size = androidx.compose.ui.geometry.Size(w - h * 0.32f, h * 0.46f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(h * 0.23f)
-                )
-                // bright specular spot, top-left
-                drawRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.45f else 0.9f),
-                            Color.Transparent
-                        ),
-                        center = Offset(w * 0.20f, h * 0.16f),
-                        radius = w * 0.26f
-                    )
-                )
-                // faint second spot, bottom-right
-                drawRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(Color.White.copy(alpha = if (isDark) 0.28f else 0.6f), Color.Transparent),
-                        center = Offset(w * 0.86f, h * 0.88f),
-                        radius = w * 0.22f
-                    )
-                )
-                // inner rim, just inside the edge
-                drawRoundRect(
-                    color = Color.White.copy(alpha = if (isDark) 0.10f else 0.35f),
-                    topLeft = Offset(2.5f * px, 2.5f * px),
-                    size = androidx.compose.ui.geometry.Size(w - 5 * px, h - 5 * px),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(h / 2 - 2.5f * px),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = px)
-                )
-            }
-            // outer rim: bright at the top-left and bottom-right, dim on the sides, like a glass edge
-            .border(
-                1.5.dp,
-                Brush.linearGradient(
-                    0f to Color.White.copy(alpha = if (isDark) 0.85f else 1f),
-                    0.35f to colors.border.copy(alpha = colors.border.alpha * 0.5f),
-                    0.65f to colors.border.copy(alpha = colors.border.alpha * 0.5f),
-                    1f to Color.White.copy(alpha = if (isDark) 0.65f else 0.9f)
-                ),
-                shape
-            )
+            .liquidGlass(LiquidGlassStyle(colors.fill, colors.border, colors.glow), isDark, pill = true)
             .clickable(onClickLabel = description, onClick = onClick)
             .semantics { contentDescription = description }
             .testTag(key.tag),
