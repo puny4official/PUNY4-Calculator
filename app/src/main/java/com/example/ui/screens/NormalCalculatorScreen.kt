@@ -357,8 +357,8 @@ private class GlassKeyColors(
     val glow: Color?
 )
 
-/** The green of the operator and equal keys (same in light and dark mode). */
-private val KeyGreen = Color(0xFF24811D)
+/** Colour 2481D (teal green) of the operator and equal keys, same in light and dark mode. */
+private val KeyGreen = Color(0xFF36BEB0)
 
 private fun operatorGlassColors() = GlassKeyColors(
     fill = listOf(lerp(KeyGreen, Color.White, 0.22f), KeyGreen, lerp(KeyGreen, Color.Black, 0.28f)),
