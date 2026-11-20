@@ -405,12 +405,18 @@ private fun operatorGlassColors(isDark: Boolean) = GlassKeyColors(
     glow = null
 )
 
-private fun equalGlassColors() = GlassKeyColors(
-    fill = listOf(lerp(KeyGreen, Color.White, 0.38f), lerp(KeyGreen, Color.White, 0.10f), lerp(KeyGreen, Color.Black, 0.22f)),
-    border = lerp(KeyGreen, Color.White, 0.65f).copy(alpha = 0.9f),
-    text = Color.White,
-    glow = KeyGreen
-)
+/** The "=" key keeps its original green. */
+private fun equalGlassColors(isDark: Boolean) = if (isDark) {
+    GlassKeyColors(
+        listOf(Color(0xFF3DBE5E), Color(0xFF1E8E3C), Color(0xFF0E6B28)),
+        Color(0xFF7BE39A).copy(alpha = 0.70f), Color(0xFFFFFFFF), Color(0xFF22C55E)
+    )
+} else {
+    GlassKeyColors(
+        listOf(Color(0xFF35B85F), Color(0xFF16A34A), Color(0xFF0D873C)),
+        Color(0xFF79D494), Color(0xFFFFFFFF), Color(0xFF188F43)
+    )
+}
 
 private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if (isDark) {
     when (kind) {
@@ -420,7 +426,7 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
         )
         KeyKind.OPERATOR -> operatorGlassColors(isDark)
         KeyKind.CLEAR -> clearGlassColors()
-        KeyKind.EQUAL -> equalGlassColors()
+        KeyKind.EQUAL -> equalGlassColors(isDark)
     }
 } else {
     when (kind) {
@@ -430,7 +436,7 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
         )
         KeyKind.OPERATOR -> operatorGlassColors(isDark)
         KeyKind.CLEAR -> clearGlassColors()
-        KeyKind.EQUAL -> equalGlassColors()
+        KeyKind.EQUAL -> equalGlassColors(isDark)
     }
 }
 
