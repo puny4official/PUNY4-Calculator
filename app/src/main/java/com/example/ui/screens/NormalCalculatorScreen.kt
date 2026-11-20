@@ -755,4 +755,4 @@ fun CalcMiniButton(
 
 
 /** Size of the faded text at the top: earlier calculations and the question moved up. Same for both. */
-private val FADED_TEXT_SIZE = 20.sp
+private val FADED_TEXT_SIZE = 25.sp
