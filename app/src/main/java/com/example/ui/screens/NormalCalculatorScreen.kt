@@ -174,7 +174,7 @@ fun NormalCalculatorScreen(
                         AutoSizeText(
                             text = formatExpressionWithCommas(expression),
                             color = if (questionOnTop) secondaryText.copy(alpha = 0.55f) else primaryText,
-                            maxFontSize = 38.sp,
+                            maxFontSize = if (questionOnTop) 20.sp else 38.sp,
                             fontWeight = FontWeight.SemiBold,
                             testTag = "expression_text",
                             onLongPress = { copyToClipboard(expression) }
