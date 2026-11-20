@@ -221,14 +221,32 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         _isResultError.value = false
     }
 
-    /** "AC": clears everything, including the faded earlier calculation at the top. */
+    // Set when "C" removed only the answer: holds the question that was kept
+    private val _answerClearedFor = MutableStateFlow<String?>(null)
+    val answerClearedFor: StateFlow<String?> = _answerClearedFor.asStateFlow()
+
+    /** "AC": clears everything, including the question and the faded earlier calculation at the top. */
     fun onClearAll() {
         _previousLine.value = null
-        onClear()
+        _answerClearedFor.value = null
+        _expression.value = "0"
+        _displayedResult.value = null
+        _resultWordsFa.value = null
+        _isResultError.value = false
     }
 
-    /** "C": clears only the current question (and answer); the faded line at the top stays. */
+    /**
+     * "C": when an answer is shown, removes only the answer and keeps the question (the key then
+     * becomes "AC"). Otherwise it clears the question; the faded line at the top stays.
+     */
     fun onClear() {
+        if (_displayedResult.value != null) {
+            _answerClearedFor.value = _expression.value
+            _displayedResult.value = null
+            _resultWordsFa.value = null
+            _isResultError.value = false
+            return
+        }
         _expression.value = "0"
         _displayedResult.value = null
         _resultWordsFa.value = null

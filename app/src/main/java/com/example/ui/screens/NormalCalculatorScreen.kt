@@ -325,7 +325,9 @@ fun NormalCalculatorScreen(
 
             // "C" clears the question only. Once it is cleared and an earlier line is still
             // kept at the top, the key turns into "AC", which clears everything.
-            val isAllClear = expression == "0" && displayedResult == null && previousLine != null
+            val answerClearedFor by viewModel.answerClearedFor.collectAsState()
+            val isAllClear = displayedResult == null &&
+                ((expression == "0" && previousLine != null) || answerClearedFor == expression)
             GlassKeypad(viewModel = viewModel, isDark = isDark, isAllClear = isAllClear)
         }
     }
