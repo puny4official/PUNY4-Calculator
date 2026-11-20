@@ -173,8 +173,8 @@ private fun GlassIconButton(
 ) {
     Box(
         modifier = Modifier
-            .size(32.dp)
-            .liquidGlass(topBarGlass(isDark), isDark, pill = false, corner = 12.dp)
+            .size(48.dp)
+            .liquidGlass(topBarGlass(isDark), isDark, pill = false, corner = 18.dp)
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description }
             .testTag(tag),
