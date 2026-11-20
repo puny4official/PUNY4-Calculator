@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -275,26 +276,52 @@ fun NormalCalculatorScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Return to the question after "=" so it can be edited again.
-            // The whole button (glass pill, glow, arrow and text) is the supplied image.
+            // Return to the question after "=" so it can be edited again (liquid-glass pill, drawn in code)
             val canReturnToExpression = displayedResult != null
-            Image(
-                painter = painterResource(
-                    id = if (isDark) R.drawable.btn_return_to_question_dark
-                    else R.drawable.btn_return_to_question_light
-                ),
-                contentDescription = "برگشت به روی سوال",
-                contentScale = ContentScale.FillWidth,
+            val returnStyle = if (isDark) {
+                LiquidGlassStyle(
+                    fill = listOf(Color(0xFF5B2A8F), Color(0xFF2E1450), Color(0xFF160828)),
+                    border = Color(0xFFC77DFF).copy(alpha = 0.85f),
+                    glow = Color(0xFFA855F7)
+                )
+            } else {
+                LiquidGlassStyle(
+                    fill = listOf(Color(0xFFF1E4FF), Color(0xFFE0C9FA), Color(0xFFCDB0F2)),
+                    border = Color(0xFFB57BEE).copy(alpha = 0.9f),
+                    glow = Color(0xFFA855F7)
+                )
+            }
+            val returnContent = if (isDark) Color.White else Color.Black
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(50.dp)
                     .alpha(if (canReturnToExpression) 1f else 0.4f)
+                    .liquidGlass(returnStyle, isDark, pill = true)
                     .clickable(
                         enabled = canReturnToExpression,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
+                        role = androidx.compose.ui.semantics.Role.Button
                     ) { viewModel.onReturnToExpression() }
-                    .testTag("key_return_to_expression")
-            )
+                    .semantics { contentDescription = "برگشت به روی سوال" }
+                    .testTag("key_return_to_expression"),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Reply,
+                    contentDescription = null,
+                    tint = returnContent,
+                    modifier = Modifier.size(26.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "برگشت به روی سوال",
+                    color = returnContent,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+            }
 
             // "C" clears the question only. Once it is cleared and an earlier line is still
             // kept at the top, the key turns into "AC", which clears everything.
