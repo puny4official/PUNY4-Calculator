@@ -149,7 +149,7 @@ private fun ThemeOptionRow(
 
 private fun topBarGlass(isDark: Boolean) = if (isDark) {
     LiquidGlassStyle(
-        fill = listOf(Color(0xFF4A1040), Color(0xFF2A0A2A), Color(0xFF160515)),
+        fill = listOf(Color(0xFF7A2468), Color(0xFF4A1246), Color(0xFF2A0A2A)),
         border = Color(0xFFFF3DB8).copy(alpha = 0.85f),
         glow = Color(0xFFFF2DAA)
     )

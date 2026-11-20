@@ -46,7 +46,7 @@ fun Modifier.liquidGlass(
             spotColor = shadowTint.copy(alpha = 0.45f)
         )
         .clip(shape)
-        .background(Brush.verticalGradient(style.fill.map { it.copy(alpha = if (isDark) 0.78f else 0.88f) }))
+        .background(Brush.verticalGradient(style.fill.map { it.copy(alpha = if (isDark) 0.96f else 0.88f) }))
         .drawBehind {
             val w = size.width
             val h = size.height
@@ -109,8 +109,8 @@ fun Modifier.liquidGlass(
             1.5.dp,
             Brush.linearGradient(
                 0f to Color.White.copy(alpha = if (isDark) 0.85f else 1f),
-                0.35f to style.border.copy(alpha = style.border.alpha * 0.5f),
-                0.65f to style.border.copy(alpha = style.border.alpha * 0.5f),
+                0.35f to style.border.copy(alpha = style.border.alpha * (if (isDark) 0.9f else 0.5f)),
+                0.65f to style.border.copy(alpha = style.border.alpha * (if (isDark) 0.9f else 0.5f)),
                 1f to Color.White.copy(alpha = if (isDark) 0.65f else 0.9f)
             ),
             shape
