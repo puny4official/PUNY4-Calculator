@@ -414,11 +414,11 @@ private fun clearGlassColors() = GlassKeyColors(
     glow = null
 )
 
-/** Operator symbols: #F5E6D3 in dark mode, white in light mode. */
+/** Operator symbols: very dark green (#0A5C1F) in light and dark mode. */
 private fun operatorGlassColors(isDark: Boolean) = GlassKeyColors(
     fill = listOf(lerp(KeyGreen, Color.White, 0.22f), KeyGreen, lerp(KeyGreen, Color.Black, 0.28f)),
     border = lerp(KeyGreen, Color.White, 0.55f).copy(alpha = 0.85f),
-    text = if (isDark) Color(0xFFF5E6D3) else Color.White,
+    text = Color(0xFF0A5C1F),
     glow = null
 )
 
