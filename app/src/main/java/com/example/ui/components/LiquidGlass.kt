@@ -39,7 +39,7 @@ fun Modifier.liquidGlass(
     val shadowTint = style.glow ?: (if (isDark) Color(0xFF000000) else Color(0xFF6A6480))
     return this
         .shadow(
-            elevation = if (style.glow != null) 10.dp else if (isDark) 0.dp else 6.dp,
+            elevation = if (style.glow != null) 10.dp else 6.dp,
             shape = shape,
             clip = false,
             ambientColor = shadowTint.copy(alpha = 0.45f),
