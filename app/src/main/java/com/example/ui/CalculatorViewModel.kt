@@ -50,8 +50,15 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     val displayedResult: StateFlow<String?> = _displayedResult.asStateFlow()
 
     // Finished calculation kept faded at the top while continuing from its result, e.g. "1+2= 3"
-    private val _previousLine = MutableStateFlow<String?>(null)
-    val previousLine: StateFlow<String?> = _previousLine.asStateFlow()
+    private val _previousLines = MutableStateFlow<List<String>>(emptyList())
+    val previousLines: StateFlow<List<String>> = _previousLines.asStateFlow()
+
+    /** Keeps the finished calculation ("13+15= 28") in the faded history at the top. */
+    private fun archiveFinishedCalculation() {
+        if (_isResultError.value) return
+        val line = "${_expression.value}= ${_displayedResult.value}"
+        _previousLines.value = (_previousLines.value + line).takeLast(30)
+    }
 
     private val _resultWordsFa = MutableStateFlow<String?>(null)
     val resultWordsFa: StateFlow<String?> = _resultWordsFa.asStateFlow()
@@ -116,6 +123,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     fun onInput(char: String) {
         // If a result was just calculated, starting a new number clears it
         if (_displayedResult.value != null && isDigitOrDecimal(char)) {
+            archiveFinishedCalculation()
             _expression.value = char
             _displayedResult.value = null
             _resultWordsFa.value = null
@@ -126,9 +134,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         // If starting an operator after result, continue expression
         if (_displayedResult.value != null && isOperator(char)) {
             val resClean = _displayedResult.value!!.replace(",", "")
-            if (!_isResultError.value) {
-                _previousLine.value = "${_expression.value}= ${_displayedResult.value}"
-            }
+            archiveFinishedCalculation()
             _expression.value = resClean + char
             _displayedResult.value = null
             _resultWordsFa.value = null
@@ -227,7 +233,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
 
     /** "AC": clears everything, including the question and the faded earlier calculation at the top. */
     fun onClearAll() {
-        _previousLine.value = null
+        _previousLines.value = emptyList()
         _answerClearedFor.value = null
         _expression.value = "0"
         _displayedResult.value = null
