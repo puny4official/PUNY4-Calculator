@@ -80,6 +80,7 @@ fun NormalCalculatorScreen(
     }
     val displayedResult by viewModel.displayedResult.collectAsState()
     val previousLine by viewModel.previousLine.collectAsState()
+    val answerClearedFor by viewModel.answerClearedFor.collectAsState()
     val resultWordsFa by viewModel.resultWordsFa.collectAsState()
     val isResultError by viewModel.isResultError.collectAsState()
     val angleMode by viewModel.angleMode.collectAsState()
@@ -124,6 +125,9 @@ fun NormalCalculatorScreen(
                 horizontalAlignment = Alignment.End
             ) {
                 val hasResult = displayedResult != null
+                // After "C" removed only the answer, the question stays at the top, faded
+                val keptOnTop = !hasResult && answerClearedFor == expression
+                val questionOnTop = hasResult || keptOnTop
 
                 // Earlier calculation we continued from, faded at the top (e.g. "1+2= 3")
                 if (!hasResult && previousLine != null) {
@@ -143,21 +147,21 @@ fun NormalCalculatorScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    contentAlignment = if (hasResult) Alignment.TopEnd else Alignment.BottomEnd
+                    contentAlignment = if (questionOnTop) Alignment.TopEnd else Alignment.BottomEnd
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .verticalScroll(
                                 rememberScrollState(),
-                                reverseScrolling = !hasResult
+                                reverseScrolling = !questionOnTop
                             ),
                         horizontalAlignment = Alignment.End
                     ) {
                         // Font shrinks as digits increase so it always fits the card width
                         AutoSizeText(
                             text = formatExpressionWithCommas(expression),
-                            color = if (hasResult) secondaryText.copy(alpha = 0.55f) else primaryText,
+                            color = if (questionOnTop) secondaryText.copy(alpha = 0.55f) else primaryText,
                             maxFontSize = 38.sp,
                             fontWeight = FontWeight.SemiBold,
                             testTag = "expression_text",
@@ -167,7 +171,7 @@ fun NormalCalculatorScreen(
                 }
 
                 // Small live preview of the answer while typing, e.g. "= 2"
-                if (!hasResult) {
+                if (!hasResult && !keptOnTop) {
                     val preview = remember(expression, angleMode) {
                         val hasOp = expression.drop(1).any { it in "+-−×÷*/^%" }
                         if (!hasOp) null else (
@@ -325,7 +329,6 @@ fun NormalCalculatorScreen(
 
             // "C" clears the question only. Once it is cleared and an earlier line is still
             // kept at the top, the key turns into "AC", which clears everything.
-            val answerClearedFor by viewModel.answerClearedFor.collectAsState()
             val isAllClear = displayedResult == null &&
                 ((expression == "0" && previousLine != null) || answerClearedFor == expression)
             GlassKeypad(viewModel = viewModel, isDark = isDark, isAllClear = isAllClear)
