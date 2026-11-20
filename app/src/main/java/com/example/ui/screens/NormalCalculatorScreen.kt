@@ -79,7 +79,7 @@ fun NormalCalculatorScreen(
         Toast.makeText(context, "کپی شد: $value", Toast.LENGTH_SHORT).show()
     }
     val displayedResult by viewModel.displayedResult.collectAsState()
-    val previousLine by viewModel.previousLine.collectAsState()
+    val previousLines by viewModel.previousLines.collectAsState()
     val answerClearedFor by viewModel.answerClearedFor.collectAsState()
     val resultWordsFa by viewModel.resultWordsFa.collectAsState()
     val isResultError by viewModel.isResultError.collectAsState()
@@ -129,16 +129,28 @@ fun NormalCalculatorScreen(
                 val keptOnTop = !hasResult && answerClearedFor == expression
                 val questionOnTop = hasResult || keptOnTop
 
-                // Earlier calculation we continued from, faded at the top (e.g. "1+2= 3")
-                if (!hasResult && previousLine != null) {
-                    AutoSizeText(
-                        text = formatExpressionWithCommas(previousLine!!),
-                        color = secondaryText.copy(alpha = 0.55f),
-                        maxFontSize = 22.sp,
-                        fontWeight = FontWeight.Medium,
-                        testTag = "previous_line_text"
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                // Earlier calculations we continued from, faded at the top (e.g. "13+15= 28").
+                // They stay until "AC" is pressed, and the list grows as you keep going.
+                if (previousLines.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 130.dp)
+                            .verticalScroll(rememberScrollState(), reverseScrolling = true),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        previousLines.forEachIndexed { index, line ->
+                            AutoSizeText(
+                                text = formatExpressionWithCommas(line),
+                                color = secondaryText.copy(alpha = 0.55f),
+                                maxFontSize = 22.sp,
+                                fontWeight = FontWeight.Medium,
+                                testTag = "previous_line_$index"
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
 
                 // Question: sits at the bottom while typing. After "=" it moves to the top
@@ -330,7 +342,7 @@ fun NormalCalculatorScreen(
             // "C" clears the question only. Once it is cleared and an earlier line is still
             // kept at the top, the key turns into "AC", which clears everything.
             val isAllClear = displayedResult == null &&
-                ((expression == "0" && previousLine != null) || answerClearedFor == expression)
+                ((expression == "0" && previousLines.isNotEmpty()) || answerClearedFor == expression)
             GlassKeypad(viewModel = viewModel, isDark = isDark, isAllClear = isAllClear)
         }
     }
