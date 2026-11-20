@@ -113,7 +113,7 @@ fun NormalCalculatorScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(bottom = 8.dp),
-            shape = RoundedCornerShape(if (isDark) 18.dp else 24.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = displayBg),
             border = androidx.compose.foundation.BorderStroke(1.dp, displayBorder)
         ) {
