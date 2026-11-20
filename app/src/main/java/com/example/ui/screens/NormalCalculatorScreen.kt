@@ -143,7 +143,7 @@ fun NormalCalculatorScreen(
                             AutoSizeText(
                                 text = formatExpressionWithCommas(line),
                                 color = secondaryText.copy(alpha = 0.55f),
-                                maxFontSize = 15.sp,
+                                maxFontSize = FADED_TEXT_SIZE,
                                 fontWeight = FontWeight.Medium,
                                 testTag = "previous_line_$index"
                             )
@@ -174,7 +174,7 @@ fun NormalCalculatorScreen(
                         AutoSizeText(
                             text = formatExpressionWithCommas(expression),
                             color = if (questionOnTop) secondaryText.copy(alpha = 0.55f) else primaryText,
-                            maxFontSize = if (questionOnTop) 20.sp else 38.sp,
+                            maxFontSize = if (questionOnTop) FADED_TEXT_SIZE else 38.sp,
                             fontWeight = FontWeight.SemiBold,
                             testTag = "expression_text",
                             onLongPress = { copyToClipboard(expression) }
@@ -560,7 +560,7 @@ private fun AutoSizeText(
         fun styleAt(fontSizeSp: Float) = TextStyle(
             fontSize = fontSizeSp.sp,
             fontWeight = fontWeight,
-            fontFamily = SevenSegmentFont,
+            fontFamily = FontFamily.Monospace,
             letterSpacing = 0.sp,
             lineHeight = (fontSizeSp * 1.2f).sp,
             textDirection = TextDirection.Ltr
@@ -753,5 +753,6 @@ fun CalcMiniButton(
 }
 
 
-/** Digital (seven-segment) font used for the numbers on the display. */
-private val SevenSegmentFont = FontFamily(Font(R.font.seven_segment))
+
+/** Size of the faded text at the top: earlier calculations and the question moved up. Same for both. */
+private val FADED_TEXT_SIZE = 20.sp
