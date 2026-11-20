@@ -389,8 +389,8 @@ private class GlassKeyColors(
 /** Colour 2479P (pastel turquoise) of the operator and equal keys, same in light and dark mode. */
 private val KeyGreen = Color(0xFF97E0D7)
 
-/** Red of the clear keys (C / AC and delete): #EF3643, with #F4B6B8 symbols, in light and dark mode. */
-private val KeyRed = Color(0xFFEF3643)
+/** Colour of the clear keys (C / AC and delete): #FF9FFF, with #F4B6B8 symbols, in light and dark mode. */
+private val KeyRed = Color(0xFFFF9FFF)
 
 private fun clearGlassColors() = GlassKeyColors(
     fill = listOf(lerp(KeyRed, Color.White, 0.22f), KeyRed, lerp(KeyRed, Color.Black, 0.28f)),
