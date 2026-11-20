@@ -360,6 +360,16 @@ private class GlassKeyColors(
 /** Colour 2481D (teal green) of the operator and equal keys, same in light and dark mode. */
 private val KeyGreen = Color(0xFF36BEB0)
 
+/** Red of the clear keys (C / AC and delete): #EF3643, with #F4B6B8 symbols, in light and dark mode. */
+private val KeyRed = Color(0xFFEF3643)
+
+private fun clearGlassColors() = GlassKeyColors(
+    fill = listOf(lerp(KeyRed, Color.White, 0.22f), KeyRed, lerp(KeyRed, Color.Black, 0.28f)),
+    border = lerp(KeyRed, Color.White, 0.55f).copy(alpha = 0.85f),
+    text = Color(0xFFF4B6B8),
+    glow = null
+)
+
 private fun operatorGlassColors() = GlassKeyColors(
     fill = listOf(lerp(KeyGreen, Color.White, 0.22f), KeyGreen, lerp(KeyGreen, Color.Black, 0.28f)),
     border = lerp(KeyGreen, Color.White, 0.55f).copy(alpha = 0.85f),
@@ -381,10 +391,7 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
             Color(0xFFB9B3CC).copy(alpha = 0.40f), Color(0xFFFFFFFF), null
         )
         KeyKind.OPERATOR -> operatorGlassColors()
-        KeyKind.CLEAR -> GlassKeyColors(
-            listOf(Color(0xFF5A1230), Color(0xFF2A0A18), Color(0xFF140610)),
-            Color(0xFFFF7BA3).copy(alpha = 0.40f), Color(0xFFE8113F), null
-        )
+        KeyKind.CLEAR -> clearGlassColors()
         KeyKind.EQUAL -> equalGlassColors()
     }
 } else {
@@ -394,10 +401,7 @@ private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if 
             Color(0xFFB9BECC), LightKeyNumberText, null
         )
         KeyKind.OPERATOR -> operatorGlassColors()
-        KeyKind.CLEAR -> GlassKeyColors(
-            listOf(Color(0xFFF3E8ED), Color(0xFFE8D8DF), Color(0xFFDCC8D2)),
-            Color(0xFFC9A9B8), LightKeyClearText, null
-        )
+        KeyKind.CLEAR -> clearGlassColors()
         KeyKind.EQUAL -> equalGlassColors()
     }
 }
