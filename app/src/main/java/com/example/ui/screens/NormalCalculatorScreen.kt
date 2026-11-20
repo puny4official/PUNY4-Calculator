@@ -64,10 +64,27 @@ import com.example.ui.components.LiquidGlassStyle
 import com.example.ui.components.liquidGlass
 import com.example.ui.theme.*
 
+private val CalculatorFontFamily = FontFamily(
+    Font(R.font.calculator_sans_regular, FontWeight.Normal),
+    Font(R.font.calculator_sans_regular, FontWeight.Medium),
+    Font(R.font.calculator_sans_bold, FontWeight.SemiBold),
+    Font(R.font.calculator_sans_bold, FontWeight.Bold)
+)
+
 @Composable
 fun NormalCalculatorScreen(
     viewModel: CalculatorViewModel,
     modifier: Modifier = Modifier
+) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        NormalCalculatorScreenContent(viewModel, modifier)
+    }
+}
+
+@Composable
+private fun NormalCalculatorScreenContent(
+    viewModel: CalculatorViewModel,
+    modifier: Modifier
 ) {
     val expression by viewModel.expression.collectAsState()
 
@@ -242,6 +259,7 @@ fun NormalCalculatorScreen(
                                 text = resultWordsFa!!,
                                 color = if (isDark) Color.White else Color.Black,
                                 fontSize = 19.sp,
+                                fontFamily = CalculatorFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 lineHeight = 27.sp,
                                 textAlign = TextAlign.Right,
@@ -334,6 +352,7 @@ fun NormalCalculatorScreen(
                     text = "برگشت به روی سوال",
                     color = returnContent,
                     fontSize = 18.sp,
+                    fontFamily = CalculatorFontFamily,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
@@ -488,6 +507,7 @@ private fun GlassKeyButton(
             Text(
                 text = label ?: "",
                 color = colors.text,
+                fontFamily = CalculatorFontFamily,
                 fontSize = when {
                     key.kind == KeyKind.OPERATOR && (label?.length ?: 0) > 1 -> 26.sp
                     key.kind == KeyKind.OPERATOR -> 34.sp
@@ -538,11 +558,11 @@ private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllCl
 }
 
 /**
- * Monospace text whose font size shrinks (1sp at a time) until it fits the available width.
+ * Calculator text in the bundled font, shrinking (1sp at a time) until it fits the available width.
  * The smallest size it may shrink to is the size at which [referenceText] (15 digits) just
  * fits the width. Once the text would need to go below that size, the font size stays there
  * and the text continues on the next lines: every line is filled completely and the rest of
- * the number goes below it, left-aligned, in reading order.
+ * the number goes below it, right-aligned, in reading order.
  */
 @Composable
 private fun AutoSizeText(
@@ -565,7 +585,7 @@ private fun AutoSizeText(
         fun styleAt(fontSizeSp: Float) = TextStyle(
             fontSize = fontSizeSp.sp,
             fontWeight = fontWeight,
-            fontFamily = FontFamily.Default,
+            fontFamily = CalculatorFontFamily,
             letterSpacing = 0.sp,
             lineHeight = (fontSizeSp * 1.2f).sp,
             textDirection = TextDirection.Ltr
@@ -620,7 +640,7 @@ private fun AutoSizeText(
             text = shownText,
             color = color,
             style = styleAt(fontSizeSp),
-            textAlign = if (needsWrap) TextAlign.Start else TextAlign.End,
+            textAlign = TextAlign.Right,
             maxLines = if (needsWrap) Int.MAX_VALUE else 1,
             softWrap = needsWrap && !chunked,
             modifier = Modifier
@@ -750,6 +770,7 @@ fun CalcMiniButton(
     ) {
         Text(
             text = text,
+            fontFamily = CalculatorFontFamily,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
