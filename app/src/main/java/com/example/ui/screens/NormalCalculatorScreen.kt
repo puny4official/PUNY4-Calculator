@@ -488,7 +488,12 @@ private fun GlassKeyButton(
             Text(
                 text = label ?: "",
                 color = colors.text,
-                fontSize = if ((label?.length ?: 0) > 1) 22.sp else 28.sp,
+                fontSize = when {
+                    key.kind == KeyKind.OPERATOR && (label?.length ?: 0) > 1 -> 26.sp
+                    key.kind == KeyKind.OPERATOR -> 34.sp
+                    (label?.length ?: 0) > 1 -> 22.sp
+                    else -> 28.sp
+                },
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
             )
