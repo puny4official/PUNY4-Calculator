@@ -143,11 +143,11 @@ fun NormalCalculatorScreen(
                             AutoSizeText(
                                 text = formatExpressionWithCommas(line),
                                 color = secondaryText.copy(alpha = 0.55f),
-                                maxFontSize = 22.sp,
+                                maxFontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 testTag = "previous_line_$index"
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
