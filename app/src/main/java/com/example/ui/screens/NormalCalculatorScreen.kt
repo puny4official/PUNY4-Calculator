@@ -280,7 +280,7 @@ fun NormalCalculatorScreen(
             val canReturnToExpression = displayedResult != null
             val returnStyle = if (isDark) {
                 LiquidGlassStyle(
-                    fill = listOf(Color(0xFF5B2A8F), Color(0xFF2E1450), Color(0xFF160828)),
+                    fill = listOf(Color(0xFF8147C2), Color(0xFF512394), Color(0xFF2E1054)),
                     border = Color(0xFFC77DFF).copy(alpha = 0.85f),
                     glow = Color(0xFFA855F7)
                 )
@@ -415,8 +415,8 @@ private fun equalGlassColors() = GlassKeyColors(
 private fun glassKeyColors(kind: KeyKind, isDark: Boolean): GlassKeyColors = if (isDark) {
     when (kind) {
         KeyKind.NUMBER -> GlassKeyColors(
-            listOf(Color(0xFF3A3548), Color(0xFF1A1724), Color(0xFF0E0C16)),
-            Color(0xFFB9B3CC).copy(alpha = 0.40f), Color(0xFFFFFFFF), null
+            listOf(Color(0xFF58526E), Color(0xFF332F45), Color(0xFF1F1C2D)),
+            Color(0xFFD3CDE8).copy(alpha = 0.70f), Color(0xFFFFFFFF), null
         )
         KeyKind.OPERATOR -> operatorGlassColors(isDark)
         KeyKind.CLEAR -> clearGlassColors()
