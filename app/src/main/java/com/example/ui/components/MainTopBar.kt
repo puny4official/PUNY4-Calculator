@@ -35,6 +35,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
@@ -199,48 +202,51 @@ private fun GlassTopBar(
     val themeMode by viewModel.themeMode.collectAsState()
     var themeMenuOpen by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        GlassIconButton(
-            Icons.Default.History, "top_bar_history_button", "تاریخچه", isDark,
-            onClick = { viewModel.setHistoryOpen(true) }
-        )
-        Spacer(Modifier.width(10.dp))
-        GlassIconButton(
-            Icons.Default.Info, "top_bar_scope_button", "دامنه و راهنما", isDark,
-            onClick = { viewModel.setScopeOpen(true) }
-        )
-        Spacer(Modifier.width(10.dp))
-        GlassIconButton(
-            Icons.Default.Palette, "top_bar_theme_button", "ظاهر", isDark,
-            onClick = { themeMenuOpen = true }
+    // The top bar keeps the same order on every phone, also when the phone language is Persian
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            ThemeDropdown(
-                expanded = themeMenuOpen,
-                onDismiss = { themeMenuOpen = false },
-                viewModel = viewModel,
-                themeMode = themeMode,
-                isDark = isDark
+            GlassIconButton(
+                Icons.Default.History, "top_bar_history_button", "تاریخچه", isDark,
+                onClick = { viewModel.setHistoryOpen(true) }
+            )
+            Spacer(Modifier.width(10.dp))
+            GlassIconButton(
+                Icons.Default.Info, "top_bar_scope_button", "دامنه و راهنما", isDark,
+                onClick = { viewModel.setScopeOpen(true) }
+            )
+            Spacer(Modifier.width(10.dp))
+            GlassIconButton(
+                Icons.Default.Palette, "top_bar_theme_button", "ظاهر", isDark,
+                onClick = { themeMenuOpen = true }
+            ) {
+                ThemeDropdown(
+                    expanded = themeMenuOpen,
+                    onDismiss = { themeMenuOpen = false },
+                    viewModel = viewModel,
+                    themeMode = themeMode,
+                    isDark = isDark
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "PUNY4 Calculator",
+                color = if (isDark) Color.White else LightTextPrimary,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
+            Spacer(Modifier.width(12.dp))
+            GlassIconButton(
+                Icons.Default.Menu, "top_bar_hamburger_button", "منو", isDark,
+                onClick = { viewModel.setDrawerOpen(true) }
             )
         }
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = "PUNY4 Calculator",
-            color = if (isDark) Color.White else LightTextPrimary,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1
-        )
-        Spacer(Modifier.width(12.dp))
-        GlassIconButton(
-            Icons.Default.Menu, "top_bar_hamburger_button", "منو", isDark,
-            onClick = { viewModel.setDrawerOpen(true) }
-        )
     }
 }
 
