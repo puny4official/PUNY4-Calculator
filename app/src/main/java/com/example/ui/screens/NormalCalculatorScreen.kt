@@ -560,7 +560,7 @@ private fun AutoSizeText(
         fun styleAt(fontSizeSp: Float) = TextStyle(
             fontSize = fontSizeSp.sp,
             fontWeight = fontWeight,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = FontFamily.Default,
             letterSpacing = 0.sp,
             lineHeight = (fontSizeSp * 1.2f).sp,
             textDirection = TextDirection.Ltr
@@ -596,7 +596,7 @@ private fun AutoSizeText(
             val charsPerLine = if (fits) {
                 0
             } else {
-                // Monospace: every character has the same width
+                // Digits all have the same width; commas and dots are narrower, so lines never overflow
                 val tenCharsWidth = widthAt("0".repeat(10), size).coerceAtLeast(1)
                 maxOf(1, (availableWidth * 10f / tenCharsWidth).toInt())
             }
