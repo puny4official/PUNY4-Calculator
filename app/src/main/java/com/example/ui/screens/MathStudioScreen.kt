@@ -52,13 +52,7 @@ fun MathStudioScreen(
 
     val categories = listOf(
         "کسر",
-        "توان",
-        "معادلات و دستگاه",
-        "مشتق",
-        "انتگرال",
-        "حد و رفع ابهام",
-        "سیگما و سری",
-        "ماتریس ۲×۲"
+        "توان"
     )
 
     LazyColumn(
@@ -138,12 +132,6 @@ fun MathStudioScreen(
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
                         "توان" -> PowerInputSection(viewModel, isDark)
-                        "معادلات و دستگاه" -> EquationInputSection(viewModel, isDark)
-                        "مشتق" -> DerivativeInputSection(viewModel, isDark)
-                        "انتگرال" -> IntegralInputSection(viewModel, isDark)
-                        "حد و رفع ابهام" -> LimitInputSection(viewModel, isDark)
-                        "سیگما و سری" -> SigmaInputSection(viewModel, isDark)
-                        "ماتریس ۲×۲" -> MatrixInputSection(viewModel, isDark)
                     }
                 }
             }
