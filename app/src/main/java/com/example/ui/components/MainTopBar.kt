@@ -468,21 +468,7 @@ private fun CheckUpdateItem(isDark: Boolean) {
             }
         }
         Box(modifier = Modifier.fillMaxWidth().aspectRatio(640f / 152f)) {
-            androidx.compose.ui.viewinterop.AndroidView(
-                factory = { ctx ->
-                    android.widget.VideoView(ctx).apply {
-                        setVideoURI(
-                            android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.check_update}")
-                        )
-                        setOnPreparedListener { player ->
-                            player.isLooping = true
-                            player.setVolume(0f, 0f)
-                            start()
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
+            CheckUpdateVideo(modifier = Modifier.fillMaxSize())
             // Transparent layer over the video that receives the taps
             Box(
                 modifier = Modifier
@@ -528,4 +514,53 @@ private fun CheckUpdateItem(isDark: Boolean) {
             }
         }
     }
+}
+
+/**
+ * Looping, muted banner video. Uses a TextureView (not VideoView/SurfaceView) so it composites
+ * normally with Compose and cannot blank the whole window on devices such as MIUI/MediaTek phones.
+ * Every media call is guarded: if playback fails, the banner is simply empty and the app keeps working.
+ */
+@Composable
+private fun CheckUpdateVideo(modifier: Modifier = Modifier) {
+    val holder = remember { arrayOfNulls<android.media.MediaPlayer>(1) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            try { holder[0]?.release() } catch (_: Throwable) {}
+            holder[0] = null
+        }
+    }
+    androidx.compose.ui.viewinterop.AndroidView(
+        factory = { ctx ->
+            android.view.TextureView(ctx).apply {
+                surfaceTextureListener = object : android.view.TextureView.SurfaceTextureListener {
+                    override fun onSurfaceTextureAvailable(st: android.graphics.SurfaceTexture, w: Int, h: Int) {
+                        try {
+                            val surface = android.view.Surface(st)
+                            val mp = android.media.MediaPlayer()
+                            holder[0] = mp
+                            val afd = ctx.resources.openRawResourceFd(R.raw.check_update)
+                            mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                            afd.close()
+                            mp.setSurface(surface)
+                            mp.isLooping = true
+                            mp.setVolume(0f, 0f)
+                            mp.setOnErrorListener { _, _, _ -> true }
+                            mp.setOnPreparedListener { try { it.start() } catch (_: Throwable) {} }
+                            mp.prepareAsync()
+                        } catch (_: Throwable) {
+                        }
+                    }
+                    override fun onSurfaceTextureSizeChanged(st: android.graphics.SurfaceTexture, w: Int, h: Int) {}
+                    override fun onSurfaceTextureDestroyed(st: android.graphics.SurfaceTexture): Boolean {
+                        try { holder[0]?.release() } catch (_: Throwable) {}
+                        holder[0] = null
+                        return true
+                    }
+                    override fun onSurfaceTextureUpdated(st: android.graphics.SurfaceTexture) {}
+                }
+            }
+        },
+        modifier = modifier
+    )
 }
