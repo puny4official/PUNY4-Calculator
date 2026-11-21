@@ -195,6 +195,128 @@ object MathStudioEngine {
     }
 
     /**
+     * Solves an integer power a^n with detailed Persian steps.
+     */
+    fun solvePower(base: BigInteger, exp: Int): MathSolutionResult {
+        if (base == BigInteger.ZERO && exp == 0) {
+            throw IllegalArgumentException("صفر به توان صفر تعریف نشده است.")
+        }
+        if (base == BigInteger.ZERO && exp < 0) {
+            throw IllegalArgumentException("صفر به توان منفی تعریف نشده است (تقسیم بر صفر).")
+        }
+        if (kotlin.math.abs(exp) > 500) {
+            throw IllegalArgumentException("توان باید بین ۵۰۰- و ۵۰۰ باشد.")
+        }
+
+        val baseNode = MathNode.Number(base.toString())
+        val expNode = MathNode.Number(exp.toString())
+        val initialFormula = MathNode.Power(baseNode, expNode)
+        val steps = mutableListOf<SolutionStep>()
+        var n = 1
+
+        steps.add(SolutionStep(
+            stepNumber = n++, titleFa = "صورت مسئله", formula = initialFormula,
+            explanationFa = "عدد ${base} پایه و عدد ${exp} توان (نما) است. توان نشان می‌دهد پایه چند بار در خودش ضرب شود.",
+            tag = "فرمول اولیه"
+        ))
+
+        val m = kotlin.math.abs(exp)
+        val baseTxt = if (base.signum() < 0) "(${base})" else "$base"
+        val result = base.pow(m)
+
+        if (exp == 0) {
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "قاعده توان صفر",
+                formula = MathNode.Equation(initialFormula, MathNode.Number("1")),
+                explanationFa = "هر عدد غیر صفر به توان صفر برابر ۱ است.",
+                tag = "قاعده"
+            ))
+            return MathSolutionResult("محاسبه توان", initialFormula, steps, MathNode.Number("1"), "1", true, "توان")
+        }
+
+        if (exp < 0) {
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "قاعده توان منفی",
+                formula = MathNode.Equation(
+                    initialFormula,
+                    MathNode.Fraction(MathNode.Number("1"), MathNode.Power(baseNode, MathNode.Number(m.toString())))
+                ),
+                explanationFa = "توان منفی یعنی معکوس: $baseTxt به توان $exp برابر است با ۱ تقسیم بر $baseTxt به توان $m.",
+                tag = "قاعده"
+            ))
+        }
+
+        if (m == 1) {
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "توان یک",
+                formula = MathNode.Equation(MathNode.Power(baseNode, MathNode.Number("1")), baseNode),
+                explanationFa = "هر عدد به توان ۱ برابر خودش است.",
+                tag = "قاعده"
+            ))
+        } else {
+            val shown = minOf(m, 8)
+            val factors = (1..shown).joinToString(" × ") { baseTxt } + if (m > shown) " × … (در مجموع $m بار)" else ""
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "نوشتن به صورت ضرب تکراری",
+                formula = MathNode.TextNode(factors),
+                explanationFa = "پایه $baseTxt را $m بار در خودش ضرب می‌کنیم.",
+                tag = "تعریف توان"
+            ))
+
+            val lines = mutableListOf<String>()
+            var acc = base
+            val maxLines = 12
+            for (i in 2..m) {
+                val next = acc.multiply(base)
+                if (i - 1 <= maxLines) lines.add("$acc × $baseTxt = $next")
+                acc = next
+            }
+            val extra = if (m - 1 > maxLines) "\n… و به همین ترتیب تا رسیدن به $m بار ضرب." else ""
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "ضرب مرحله‌به‌مرحله",
+                formula = MathNode.Equation(MathNode.Power(baseNode, MathNode.Number(m.toString())), MathNode.Number(result.toString())),
+                explanationFa = "ضرب را قدم‌به‌قدم انجام می‌دهیم:\n" + lines.joinToString("\n") + extra,
+                tag = "محاسبه"
+            ))
+
+            if (base.signum() < 0) {
+                steps.add(SolutionStep(
+                    stepNumber = n++, titleFa = "بررسی علامت",
+                    formula = MathNode.Number(result.toString()),
+                    explanationFa = if (m % 2 == 0) "پایه منفی و توان زوج است، پس جواب مثبت می‌شود." else "پایه منفی و توان فرد است، پس جواب منفی می‌ماند.",
+                    tag = "علامت"
+                ))
+            }
+        }
+
+        val exactNode: MathNode
+        val approx: String
+        if (exp < 0) {
+            val sign = if (result.signum() < 0) -1 else 1
+            val den = result.abs()
+            val fracNode = MathNode.Fraction(MathNode.Number(sign.toString()), MathNode.Number(den.toString()))
+            exactNode = if (sign < 0) MathNode.Fraction(MathNode.Number("-1"), MathNode.Number(den.toString())) else fracNode
+            approx = BigDecimal(sign).divide(BigDecimal(den), MathContext(8, RoundingMode.HALF_UP)).toPlainString()
+            steps.add(SolutionStep(
+                stepNumber = n++, titleFa = "گرفتن معکوس", formula = exactNode,
+                explanationFa = "چون توان منفی بود، جواب را معکوس می‌کنیم: ۱ تقسیم بر $result (تقریباً $approx).",
+                tag = "محاسبه"
+            ))
+        } else {
+            exactNode = MathNode.Number(result.toString())
+            approx = result.toString()
+        }
+
+        steps.add(SolutionStep(
+            stepNumber = n, titleFa = "پاسخ نهایی", formula = exactNode,
+            explanationFa = "$baseTxt به توان $exp برابر است با ${if (exp < 0) "۱/${result.abs()} (علامت ${if (result.signum() < 0) "منفی" else "مثبت"})" else result.toString()}.",
+            tag = "پاسخ نهایی"
+        ))
+
+        return MathSolutionResult("محاسبه توان", initialFormula, steps, exactNode, approx, true, "توان")
+    }
+
+    /**
      * Solves quadratic equation: a*x^2 + b*x + c = 0
      * using Delta (discriminant) method.
      */
