@@ -51,7 +51,8 @@ fun MathStudioScreen(
     val secondaryText = if (isDark) TextSecondary else LightTextSecondary
 
     val categories = listOf(
-        "کسر و توان",
+        "کسر",
+        "توان",
         "معادلات و دستگاه",
         "مشتق",
         "انتگرال",
@@ -135,7 +136,8 @@ fun MathStudioScreen(
 
                     // Render Inputs Based on Category
                     when (activeCategory) {
-                        "کسر و توان" -> FractionInputSection(viewModel, isDark)
+                        "کسر" -> FractionInputSection(viewModel, isDark)
+                        "توان" -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PowerBox(isDark) }
                         "معادلات و دستگاه" -> EquationInputSection(viewModel, isDark)
                         "مشتق" -> DerivativeInputSection(viewModel, isDark)
                         "انتگرال" -> IntegralInputSection(viewModel, isDark)
@@ -368,25 +370,6 @@ fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
     var shown by remember { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "کسر",
-                color = if (isDark) TextPrimary else LightTextPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-            PowerBox(isDark)
-            Text(
-                text = "توان",
-                color = if (isDark) TextPrimary else LightTextPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
