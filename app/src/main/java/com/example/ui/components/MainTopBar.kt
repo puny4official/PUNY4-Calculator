@@ -266,6 +266,7 @@ fun HamburgerSideSheet(
     val isDark = themeMode == AppThemeMode.AMOLED_DARK
 
     if (isOpen) {
+      CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -389,6 +390,7 @@ fun HamburgerSideSheet(
                 }
             }
         }
+      }
     }
 }
 
