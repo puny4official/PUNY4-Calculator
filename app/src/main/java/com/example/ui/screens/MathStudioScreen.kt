@@ -50,6 +50,7 @@ fun MathStudioScreen(
     val primaryText = if (isDark) TextPrimary else LightTextPrimary
     val secondaryText = if (isDark) TextSecondary else LightTextSecondary
 
+    var showPowerOps by remember { mutableStateOf(false) }
     val categories = listOf(
         "کسر",
         "توان"
@@ -129,7 +130,7 @@ fun MathStudioScreen(
                                     .widthIn(max = 150.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(PurplePrimary)
-                                    .clickable { /* TODO: به‌زودی */ }
+                                    .clickable { showPowerOps = !showPowerOps }
                                     .padding(horizontal = 10.dp, vertical = 8.dp)
                                     .testTag("power_operations_button"),
                                 contentAlignment = Alignment.Center
@@ -154,7 +155,7 @@ fun MathStudioScreen(
                     // Render Inputs Based on Category
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
-                        "توان" -> PowerInputSection(viewModel, isDark)
+                        "توان" -> if (showPowerOps) PowerOperationsSection(isDark) else PowerInputSection(viewModel, isDark)
                     }
                 }
             }
@@ -749,7 +750,11 @@ private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: Strin
 }
 
 @Composable
-private fun PowerBox(base: String, onBase: (String) -> Unit, exp: String, onExp: (String) -> Unit, isDark: Boolean) {
+private fun PowerBox(
+    base: String, onBase: (String) -> Unit,
+    exp: String, onExp: (String) -> Unit,
+    isDark: Boolean, scale: Float = 1f
+) {
     val textColor = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B2030)
     val style = androidx.compose.ui.text.TextStyle(
         fontFamily = FontFamily.Serif,
@@ -758,12 +763,11 @@ private fun PowerBox(base: String, onBase: (String) -> Unit, exp: String, onExp:
         textAlign = TextAlign.Center,
         color = textColor
     )
-    Box(modifier = Modifier.size(width = 104.dp, height = 92.dp)) {
-        // Base box
+    Box(modifier = Modifier.size(width = (104 * scale).dp, height = (92 * scale).dp)) {
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(66.dp)
+                .size((66 * scale).dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(if (isDark) Color(0xFF1A1426) else Color.White)
                 .border(2.dp, Color(0xFFDCC8F8), RoundedCornerShape(14.dp)),
@@ -773,16 +777,15 @@ private fun PowerBox(base: String, onBase: (String) -> Unit, exp: String, onExp:
                 value = base,
                 onValueChange = onBase,
                 singleLine = true,
-                textStyle = style.copy(fontSize = 28.sp),
+                textStyle = style.copy(fontSize = (28 * scale).sp),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
-                modifier = Modifier.width(54.dp)
+                modifier = Modifier.width((54 * scale).dp)
             )
         }
-        // Exponent box (overlapping top-right)
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(42.dp)
+                .size((42 * scale).dp)
                 .clip(RoundedCornerShape(13.dp))
                 .background(if (isDark) Color(0xFF2E1B4D) else Color(0xFFF1E8FD))
                 .border(2.5.dp, Color(0xFF9B5CF6), RoundedCornerShape(13.dp)),
@@ -792,11 +795,47 @@ private fun PowerBox(base: String, onBase: (String) -> Unit, exp: String, onExp:
                 value = exp,
                 onValueChange = onExp,
                 singleLine = true,
-                textStyle = style.copy(fontSize = 20.sp),
+                textStyle = style.copy(fontSize = (20 * scale).sp),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
-                modifier = Modifier.width(32.dp)
+                modifier = Modifier.width((32 * scale).dp)
             )
         }
+    }
+}
+
+/** Page opened from the power "operations" button: aᵐ  (+ − × ÷)  bⁿ — inputs only, all empty. */
+@Composable
+fun PowerOperationsSection(isDark: Boolean) {
+    var base1 by remember { mutableStateOf("") }
+    var exp1 by remember { mutableStateOf("") }
+    var base2 by remember { mutableStateOf("") }
+    var exp2 by remember { mutableStateOf("") }
+    var op by remember { mutableStateOf("+") }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PowerBox(base1, { base1 = it }, exp1, { exp1 = it }, isDark, scale = 0.85f)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf("+", "−", "×", "÷").forEach { sign ->
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (op == sign) Color(0xFFE2D0FA)
+                            else if (isDark) Color(0xFF2A2140) else Color(0xFFEDE3FB)
+                        )
+                        .clickable { op = sign },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(sign, color = Color(0xFF7C3AED), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        PowerBox(base2, { base2 = it }, exp2, { exp2 = it }, isDark, scale = 0.85f)
     }
 }
 
