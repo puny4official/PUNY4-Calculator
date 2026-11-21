@@ -304,6 +304,11 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         _studioError.value = null
     }
 
+    fun clearStudioSolution() {
+        _studioSolution.value = null
+        _studioError.value = null
+    }
+
     fun solveStudioFraction(num1: Long, den1: Long, op: String, num2: Long, den2: Long) {
         try {
             _studioError.value = null

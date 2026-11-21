@@ -71,7 +71,7 @@ object MathStudioEngine {
                             MathNode.TextNode("ک.م.م($den1, $den2)"),
                             MathNode.Number(lcmDen.toString())
                         ),
-                        explanationFa = "برای جمع یا تفریق دو کسر، ابتدا مخرج مشترک را از طریق کمترین مضرب مشترک مخرج‌ها پیدا می‌کنیم که برابر $lcmDen است.",
+                        explanationFa = "برای جمع یا تفریق، مخرج‌ها باید یکسان باشند. کمترین مضرب مشترک $den1 و $den2 را پیدا می‌کنیم: $lcmDen. ضریب کسر اول: $lcmDen ÷ $den1 = $factor1 و ضریب کسر دوم: $lcmDen ÷ $den2 = $factor2.",
                         tag = "تبدیل جبری"
                     )
                 )
