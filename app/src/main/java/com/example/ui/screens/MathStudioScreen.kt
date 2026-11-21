@@ -137,7 +137,7 @@ fun MathStudioScreen(
                     // Render Inputs Based on Category
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
-                        "توان" -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PowerBox(isDark) }
+                        "توان" -> PowerInputSection(viewModel, isDark)
                         "معادلات و دستگاه" -> EquationInputSection(viewModel, isDark)
                         "مشتق" -> DerivativeInputSection(viewModel, isDark)
                         "انتگرال" -> IntegralInputSection(viewModel, isDark)
@@ -738,9 +738,7 @@ private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: Strin
 }
 
 @Composable
-private fun PowerBox(isDark: Boolean) {
-    var base by remember { mutableStateOf("") }
-    var exp by remember { mutableStateOf("") }
+private fun PowerBox(base: String, onBase: (String) -> Unit, exp: String, onExp: (String) -> Unit, isDark: Boolean) {
     val textColor = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B2030)
     val style = androidx.compose.ui.text.TextStyle(
         fontFamily = FontFamily.Serif,
@@ -762,7 +760,7 @@ private fun PowerBox(isDark: Boolean) {
         ) {
             androidx.compose.foundation.text.BasicTextField(
                 value = base,
-                onValueChange = { base = it },
+                onValueChange = onBase,
                 singleLine = true,
                 textStyle = style.copy(fontSize = 28.sp),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
@@ -781,12 +779,53 @@ private fun PowerBox(isDark: Boolean) {
         ) {
             androidx.compose.foundation.text.BasicTextField(
                 value = exp,
-                onValueChange = { exp = it },
+                onValueChange = onExp,
                 singleLine = true,
                 textStyle = style.copy(fontSize = 20.sp),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
                 modifier = Modifier.width(32.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun PowerInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var base by remember { mutableStateOf("") }
+    var exp by remember { mutableStateOf("") }
+    var shown by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        PowerBox(base, { base = it; shown = false }, exp, { exp = it; shown = false }, isDark)
+
+        SolveButton(title = "نمایش صورت سوال") {
+            viewModel.clearStudioSolution()
+            shown = true
+        }
+
+        if (shown) {
+            val color = if (isDark) Color(0xFFE8E8E8) else Color(0xFF1B1B1B)
+            val st = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Serif, color = color)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDark) AmoledBackground else LightBackground)
+                    .padding(vertical = 22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Text(base, style = st.copy(fontSize = 44.sp), modifier = Modifier.padding(top = 14.dp))
+                    Text(exp, style = st.copy(fontSize = 26.sp), modifier = Modifier.padding(start = 2.dp))
+                }
+            }
+            SolveButton(title = "محاسبه توان با مراحل") {
+                viewModel.solveStudioPower(base, exp)
+            }
         }
     }
 }

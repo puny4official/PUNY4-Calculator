@@ -309,6 +309,23 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         _studioError.value = null
     }
 
+    fun solveStudioPower(base: String, exp: String) {
+        try {
+            _studioError.value = null
+            val b = base.trim().toBigIntegerOrNull()
+            val e = exp.trim().toIntOrNull()
+            if (b == null || e == null) {
+                _studioError.value = "پایه و توان باید عدد صحیح باشند."
+                return
+            }
+            val solution = MathStudioEngine.solvePower(b, e)
+            _studioSolution.value = solution
+            saveStudioSolution(solution)
+        } catch (ex: Exception) {
+            _studioError.value = ex.message ?: "خطا در محاسبه توان"
+        }
+    }
+
     fun solveStudioFraction(num1: Long, den1: Long, op: String, num2: Long, den2: Long) {
         try {
             _studioError.value = null
