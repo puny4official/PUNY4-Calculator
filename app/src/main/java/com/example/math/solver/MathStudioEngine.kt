@@ -316,6 +316,140 @@ object MathStudioEngine {
         return MathSolutionResult("محاسبه توان", initialFormula, steps, exactNode, approx, true, "توان")
     }
 
+    private fun fracNode(n: BigInteger, d: BigInteger): MathNode =
+        if (d == BigInteger.ONE) MathNode.Number(n.toString())
+        else MathNode.Fraction(MathNode.Number(n.toString()), MathNode.Number(d.toString()))
+
+    private fun fracText(n: BigInteger, d: BigInteger): String = if (d == BigInteger.ONE) "$n" else "$n/$d"
+
+    /** Describes how a^e is computed (as a numerator/denominator pair) in Persian. */
+    private fun describePower(label: String, base: BigInteger, exp: Int): Triple<BigInteger, BigInteger, String> {
+        val m = kotlin.math.abs(exp)
+        val bt = if (base.signum() < 0) "(${base})" else "$base"
+        val pos = base.pow(m)
+        val sb = StringBuilder()
+        when {
+            exp == 0 -> sb.append("$label: $bt به توان 0 برابر ۱ است (هر عدد غیر صفر به توان صفر ۱ می‌شود).")
+            m == 1 && exp > 0 -> sb.append("$label: $bt به توان ۱ برابر خودش، یعنی $bt است.")
+            else -> {
+                val shown = minOf(m, 8)
+                val rep = (1..shown).joinToString(" × ") { bt } + if (m > shown) " × …" else ""
+                sb.append("$label: $bt به توان $m یعنی $rep.")
+                var acc = base
+                val lines = mutableListOf<String>()
+                for (i in 2..m) {
+                    val nx = acc.multiply(base)
+                    if (i - 1 <= 8) lines.add("$acc × $bt = $nx")
+                    acc = nx
+                }
+                if (lines.isNotEmpty()) sb.append("\n").append(lines.joinToString("\n"))
+                if (m - 1 > 8) sb.append("\n… و به همین ترتیب ادامه می‌دهیم.")
+                sb.append("\nپس $bt به توان $m برابر $pos است.")
+                if (base.signum() < 0) sb.append(if (m % 2 == 0) " (پایه منفی و توان زوج، پس جواب مثبت است)" else " (پایه منفی و توان فرد، پس جواب منفی است)")
+            }
+        }
+        return if (exp >= 0) {
+            Triple(if (exp == 0) BigInteger.ONE else pos, BigInteger.ONE, sb.toString())
+        } else {
+            val sign = if (pos.signum() < 0) BigInteger.ONE.negate() else BigInteger.ONE
+            sb.append("\nچون توان منفی است، معکوس می‌کنیم: $bt به توان $exp برابر ${if (sign.signum() < 0) "-" else ""}۱/${pos.abs()} است.")
+            Triple(sign, pos.abs(), sb.toString())
+        }
+    }
+
+    /**
+     * Solves a^m (op) b^n for integers with detailed Persian steps.
+     */
+    fun solvePowerOperation(b1: BigInteger, e1: Int, op: String, b2: BigInteger, e2: Int): MathSolutionResult {
+        for ((b, e) in listOf(b1 to e1, b2 to e2)) {
+            if (b == BigInteger.ZERO && e == 0) throw IllegalArgumentException("صفر به توان صفر تعریف نشده است.")
+            if (b == BigInteger.ZERO && e < 0) throw IllegalArgumentException("صفر به توان منفی تعریف نشده است.")
+            if (kotlin.math.abs(e) > 200) throw IllegalArgumentException("توان باید بین ۲۰۰- و ۲۰۰ باشد.")
+        }
+        val p1 = MathNode.Power(MathNode.Number(b1.toString()), MathNode.Number(e1.toString()))
+        val p2 = MathNode.Power(MathNode.Number(b2.toString()), MathNode.Number(e2.toString()))
+        val initial: MathNode = when (op) {
+            "+" -> MathNode.Addition(p1, p2)
+            "−", "-" -> MathNode.Subtraction(p1, p2)
+            "×", "*" -> MathNode.Multiplication(p1, p2, true)
+            else -> MathNode.Division(p1, p2)
+        }
+        val opName = when (op) { "+" -> "جمع"; "−", "-" -> "تفریق"; "×", "*" -> "ضرب"; else -> "تقسیم" }
+        val sign = when (op) { "-" -> "−"; "*" -> "×"; else -> op }
+        val steps = mutableListOf<SolutionStep>()
+        var n = 1
+
+        steps.add(SolutionStep(n++, "صورت مسئله", initial,
+            "می‌خواهیم $opName دو عبارت توان‌دار را حساب کنیم. ابتدا هر توان را جداگانه حساب می‌کنیم، سپس عملیات $opName را روی جواب‌ها انجام می‌دهیم.", "فرمول اولیه"))
+
+        val (n1, d1, t1) = describePower("عبارت اول", b1, e1)
+        steps.add(SolutionStep(n++, "محاسبهٔ عبارت اول", MathNode.Equation(p1, fracNode(n1, d1)), t1, "محاسبه"))
+        val (n2, d2, t2) = describePower("عبارت دوم", b2, e2)
+        steps.add(SolutionStep(n++, "محاسبهٔ عبارت دوم", MathNode.Equation(p2, fracNode(n2, d2)), t2, "محاسبه"))
+
+        val v1 = fracNode(n1, d1)
+        val v2 = fracNode(n2, d2)
+        val replaced: MathNode = when (op) {
+            "+" -> MathNode.Addition(v1, v2)
+            "−", "-" -> MathNode.Subtraction(v1, v2)
+            "×", "*" -> MathNode.Multiplication(v1, v2, true)
+            else -> MathNode.Division(v1, v2)
+        }
+        steps.add(SolutionStep(n++, "جای‌گذاری جواب‌ها", MathNode.Equation(initial, replaced),
+            "جواب هر توان را به جای آن می‌نویسیم: ${fracText(n1, d1)} $sign ${fracText(n2, d2)}.", "جای‌گذاری"))
+
+        var rn: BigInteger
+        var rd: BigInteger
+        when (op) {
+            "+", "−", "-" -> {
+                if (d1 == BigInteger.ONE && d2 == BigInteger.ONE) {
+                    rn = if (op == "+") n1.add(n2) else n1.subtract(n2)
+                    rd = BigInteger.ONE
+                    steps.add(SolutionStep(n++, "انجام $opName", MathNode.Equation(replaced, MathNode.Number(rn.toString())),
+                        "${n1} $sign ${n2} = $rn", "محاسبه"))
+                } else {
+                    val lcm = d1.multiply(d2).divide(d1.gcd(d2))
+                    val f1 = lcm.divide(d1); val f2 = lcm.divide(d2)
+                    val s1 = n1.multiply(f1); val s2 = n2.multiply(f2)
+                    steps.add(SolutionStep(n++, "هم‌مخرج کردن (ک.م.م، کوچک‌ترین مخرج مشترک)",
+                        MathNode.Equation(replaced, if (op == "+") MathNode.Addition(fracNode(s1, lcm), fracNode(s2, lcm)) else MathNode.Subtraction(fracNode(s1, lcm), fracNode(s2, lcm))),
+                        "برای $opName کسرها مخرج‌ها باید یکسان باشند. ک.م.م (کوچک‌ترین مخرج مشترک) $d1 و $d2 برابر $lcm است. صورت اول را در $f1 و صورت دوم را در $f2 ضرب می‌کنیم: $s1 و $s2.", "محاسبه"))
+                    rn = if (op == "+") s1.add(s2) else s1.subtract(s2)
+                    rd = lcm
+                    steps.add(SolutionStep(n++, "انجام $opName صورت‌ها", MathNode.Equation(replaced, fracNode(rn, rd)),
+                        "صورت‌ها را $opName می‌کنیم: $s1 $sign $s2 = $rn و مخرج همان $lcm می‌ماند.", "محاسبه"))
+                }
+            }
+            "×", "*" -> {
+                rn = n1.multiply(n2); rd = d1.multiply(d2)
+                steps.add(SolutionStep(n++, "انجام ضرب", MathNode.Equation(replaced, fracNode(rn, rd)),
+                    "صورت‌ها را در هم و مخرج‌ها را در هم ضرب می‌کنیم: ${n1} × ${n2} = $rn و ${d1} × ${d2} = $rd.", "محاسبه"))
+            }
+            else -> {
+                if (n2.signum() == 0) throw IllegalArgumentException("تقسیم بر صفر ممکن نیست؛ عبارت دوم برابر صفر است.")
+                rn = n1.multiply(d2); rd = d1.multiply(n2)
+                steps.add(SolutionStep(n++, "انجام تقسیم (ضرب در معکوس)", MathNode.Equation(replaced, fracNode(rn, rd)),
+                    "تقسیم یعنی ضرب در معکوس: ${fracText(n1, d1)} × ${fracText(d2, n2)}. پس صورت: $n1 × $d2 = $rn و مخرج: $d1 × $n2 = $rd.", "محاسبه"))
+            }
+        }
+        if (rd.signum() < 0) { rn = rn.negate(); rd = rd.negate() }
+        val g = rn.abs().gcd(rd)
+        if (rn.signum() != 0 && g > BigInteger.ONE) {
+            val sn = rn.divide(g); val sd = rd.divide(g)
+            steps.add(SolutionStep(n++, "ساده‌سازی با ب.م.م (بزرگ‌ترین مخرج مشترک)",
+                MathNode.Equation(fracNode(rn, rd), fracNode(sn, sd)),
+                "بزرگ‌ترین مقسوم‌علیه مشترک (ب.م.م، بزرگ‌ترین مخرج مشترک) صورت و مخرج برابر $g است؛ هر دو را بر $g تقسیم می‌کنیم.", "ساده‌سازی"))
+            rn = sn; rd = sd
+        }
+        if (rn.signum() == 0) rd = BigInteger.ONE
+        val exact = fracNode(rn, rd)
+        val approx = BigDecimal(rn).divide(BigDecimal(rd), MathContext(8, RoundingMode.HALF_UP)).toPlainString()
+        steps.add(SolutionStep(n, "پاسخ نهایی", exact,
+            "پاسخ دقیق برابر ${fracText(rn, rd)} است${if (rd != BigInteger.ONE) " (تقریباً $approx)" else ""}.", "پاسخ نهایی"))
+
+        return MathSolutionResult("محاسبه عملیات توان‌ها", initial, steps, exact, approx, true, "توان")
+    }
+
     /**
      * Solves quadratic equation: a*x^2 + b*x + c = 0
      * using Delta (discriminant) method.

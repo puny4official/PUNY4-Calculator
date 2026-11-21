@@ -155,7 +155,7 @@ fun MathStudioScreen(
                     // Render Inputs Based on Category
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
-                        "توان" -> if (showPowerOps) PowerOperationsSection(isDark) else PowerInputSection(viewModel, isDark)
+                        "توان" -> if (showPowerOps) PowerOperationsSection(viewModel, isDark) else PowerInputSection(viewModel, isDark)
                     }
                 }
             }
@@ -805,19 +805,21 @@ private fun PowerBox(
 
 /** Page opened from the power "operations" button: aᵐ  (+ − × ÷)  bⁿ — inputs only, all empty. */
 @Composable
-fun PowerOperationsSection(isDark: Boolean) {
+fun PowerOperationsSection(viewModel: CalculatorViewModel, isDark: Boolean) {
     var base1 by remember { mutableStateOf("") }
     var exp1 by remember { mutableStateOf("") }
     var base2 by remember { mutableStateOf("") }
     var exp2 by remember { mutableStateOf("") }
     var op by remember { mutableStateOf("+") }
+    var shown by remember { mutableStateOf(false) }
 
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PowerBox(base1, { base1 = it }, exp1, { exp1 = it }, isDark, scale = 0.85f)
+        PowerBox(base1, { base1 = it; shown = false }, exp1, { exp1 = it; shown = false }, isDark, scale = 0.85f)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf("+", "−", "×", "÷").forEach { sign ->
                 Box(
@@ -828,14 +830,43 @@ fun PowerOperationsSection(isDark: Boolean) {
                             if (op == sign) Color(0xFFE2D0FA)
                             else if (isDark) Color(0xFF2A2140) else Color(0xFFEDE3FB)
                         )
-                        .clickable { op = sign },
+                        .clickable { op = sign; shown = false },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(sign, color = Color(0xFF7C3AED), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
-        PowerBox(base2, { base2 = it }, exp2, { exp2 = it }, isDark, scale = 0.85f)
+        PowerBox(base2, { base2 = it; shown = false }, exp2, { exp2 = it; shown = false }, isDark, scale = 0.85f)
+    }
+
+        SolveButton(title = "نمایش صورت سوال") {
+            viewModel.clearStudioSolution()
+            shown = true
+        }
+        if (shown) {
+            val color = if (isDark) Color(0xFFE8E8E8) else Color(0xFF1B1B1B)
+            val st = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Serif, color = color)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDark) AmoledBackground else LightBackground)
+                    .padding(vertical = 22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Text(base1, style = st.copy(fontSize = 40.sp), modifier = Modifier.padding(top = 12.dp))
+                    Text(exp1, style = st.copy(fontSize = 24.sp), modifier = Modifier.padding(start = 2.dp))
+                    Text(" $op ", style = st.copy(fontSize = 38.sp), modifier = Modifier.padding(top = 8.dp))
+                    Text(base2, style = st.copy(fontSize = 40.sp), modifier = Modifier.padding(top = 12.dp))
+                    Text(exp2, style = st.copy(fontSize = 24.sp), modifier = Modifier.padding(start = 2.dp))
+                }
+            }
+            SolveButton(title = "محاسبه توان با مراحل") {
+                viewModel.solveStudioPowerOperation(base1, exp1, op, base2, exp2)
+            }
+        }
     }
 }
 

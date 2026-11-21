@@ -326,6 +326,23 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun solveStudioPowerOperation(b1: String, e1: String, op: String, b2: String, e2: String) {
+        try {
+            _studioError.value = null
+            val x1 = b1.trim().toBigIntegerOrNull(); val y1 = e1.trim().toIntOrNull()
+            val x2 = b2.trim().toBigIntegerOrNull(); val y2 = e2.trim().toIntOrNull()
+            if (x1 == null || y1 == null || x2 == null || y2 == null) {
+                _studioError.value = "پایه‌ها و توان‌ها باید عدد صحیح باشند."
+                return
+            }
+            val solution = MathStudioEngine.solvePowerOperation(x1, y1, op, x2, y2)
+            _studioSolution.value = solution
+            saveStudioSolution(solution)
+        } catch (ex: Exception) {
+            _studioError.value = ex.message ?: "خطا در محاسبه"
+        }
+    }
+
     fun solveStudioFraction(num1: Long, den1: Long, op: String, num2: Long, den2: Long) {
         try {
             _studioError.value = null
