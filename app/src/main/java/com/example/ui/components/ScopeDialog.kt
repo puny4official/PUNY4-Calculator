@@ -97,7 +97,7 @@ fun ScopeDialog(
                                 }
                                 Text("• محاسبات علمی با دقت فوق‌العاده بالا تا ۳۶ رقم معنادار", color = secondaryText, fontSize = 12.5.sp)
                                 Text("• تفکیک سه‌رقمی اعداد با کاما ( ، ) و تلفظ حروفی فارسی عدد", color = secondaryText, fontSize = 12.5.sp)
-                                Text("• محاسبات چهار عمل اصلی کسرها با ک.م.م و ب.م.م مرحله‌به‌مرحله", color = secondaryText, fontSize = 12.5.sp)
+                                Text("• محاسبات چهار عمل اصلی کسرها با ک.م.م (کوچک‌ترین مخرج مشترک) و ب.م.م (بزرگ‌ترین مخرج مشترک) مرحله‌به‌مرحله", color = secondaryText, fontSize = 12.5.sp)
                                 Text("• حل تحلیلی معادلات درجه دوم با بررسی علامت دلتا (حقیقی و مختلط)", color = secondaryText, fontSize = 12.5.sp)
                                 Text("• مشتق توابع چندجمله‌ای با قاعده توان و مجموع و محاسبه در نقطه", color = secondaryText, fontSize = 12.5.sp)
                                 Text("• انتگرال معین و نامعین با تابع پادمشتق و قضیه اساسی حسابان", color = secondaryText, fontSize = 12.5.sp)
