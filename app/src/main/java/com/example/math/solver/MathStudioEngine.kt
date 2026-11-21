@@ -66,7 +66,7 @@ object MathStudioEngine {
                 steps.add(
                     SolutionStep(
                         stepNumber = stepNum++,
-                        titleFa = "یافتن مخرج مشترک (ک.م.م (کوچک‌ترین مخرج مشترک))",
+                        titleFa = "یافتن مخرج مشترک (کوچک‌ترین مخرج مشترک)",
                         formula = MathNode.Equation(
                             MathNode.TextNode("ک.م.م (کوچک‌ترین مخرج مشترک) $den1 و $den2"),
                             MathNode.Number(lcmDen.toString())
@@ -159,7 +159,7 @@ object MathStudioEngine {
                         MathNode.Fraction(MathNode.Number(resNum.toString()), MathNode.Number(resDen.toString())),
                         MathNode.Fraction(MathNode.Number(finalNum.toString()), MathNode.Number(finalDen.toString()))
                     ),
-                    explanationFa = "بزرگ‌ترین مقسوم‌علیه مشترک (ب.م.م (بزرگ‌ترین مخرج مشترک)) صورت و مخرج برابر با $g است؛ بنابراین هر دو را بر $g تقسیم می‌کنیم.",
+                    explanationFa = "بزرگ‌ترین مقسوم‌علیه مشترک (ب.م.م، بزرگ‌ترین مخرج مشترک) صورت و مخرج برابر با $g است؛ بنابراین هر دو را بر $g تقسیم می‌کنیم.",
                     tag = "ساده‌سازی"
                 )
             )
