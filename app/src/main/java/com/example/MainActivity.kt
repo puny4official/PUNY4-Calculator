@@ -38,14 +38,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Background check for new versions + permission to show its notification
-        UpdateJobService.schedule(applicationContext)
-        if (Build.VERSION.SDK_INT >= 33 &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-                .launch(Manifest.permission.POST_NOTIFICATIONS)
+        // Background check for new versions + permission to show its notification.
+        // This must never be able to stop the app from opening (some phones refuse it).
+        try {
+            UpdateJobService.schedule(applicationContext)
+        } catch (_: Throwable) {
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= 33 &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+                    .launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } catch (_: Throwable) {
         }
 
         setContent {
