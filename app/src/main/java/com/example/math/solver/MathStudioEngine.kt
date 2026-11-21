@@ -190,7 +190,7 @@ object MathStudioEngine {
             exactResult = exactNode,
             approximateResult = approx,
             isExact = true,
-            categoryFa = "کسر و توان"
+            categoryFa = "کسر"
         )
     }
 

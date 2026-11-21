@@ -73,7 +73,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     val isScientificExpanded: StateFlow<Boolean> = _isScientificExpanded.asStateFlow()
 
     // Math Studio State
-    private val _studioCategory = MutableStateFlow("کسر و توان")
+    private val _studioCategory = MutableStateFlow("کسر")
     val studioCategory: StateFlow<String> = _studioCategory.asStateFlow()
 
     private val _studioSolution = MutableStateFlow<MathSolutionResult?>(null)
