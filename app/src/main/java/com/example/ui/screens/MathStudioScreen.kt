@@ -119,13 +119,36 @@ fun MathStudioScreen(
                             text = "تنظیم پارامترهای $activeCategory",
                             color = primaryText,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
-                        Icon(
-                            imageVector = Icons.Default.Functions,
-                            contentDescription = null,
-                            tint = PurplePrimary
-                        )
+                        if (activeCategory == "توان") {
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .widthIn(max = 150.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(PurplePrimary)
+                                    .clickable { /* TODO: به‌زودی */ }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                                    .testTag("power_operations_button"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "عملیات ضرب و جمع و تفریق و تقسیم توان ها",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Functions,
+                                contentDescription = null,
+                                tint = PurplePrimary
+                            )
+                        }
                     }
 
                     // Render Inputs Based on Category
