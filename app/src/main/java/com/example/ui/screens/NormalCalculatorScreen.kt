@@ -507,30 +507,33 @@ private fun GlassKeyButton(
  */
 @Composable
 private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllClear: Boolean) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        glassKeyRows.forEachIndexed { rowIndex, row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                row.forEachIndexed { columnIndex, key ->
-                    val isClearKey = rowIndex == 0 && columnIndex == 0
-                    // "C" clears the question; once cleared it turns into "AC" (clears everything)
-                    val label = if (isClearKey && isAllClear) "AC" else key.label
-                    val description = if (isClearKey && isAllClear) "پاک کردن همه" else key.description
-                    GlassKeyButton(
-                        key = key,
-                        label = label,
-                        description = description,
-                        isDark = isDark,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (isClearKey && isAllClear) viewModel.onClearAll() else key.action(viewModel)
-                        }
-                    )
+    // C and delete always stay on the left, the operators always on the right, on every phone
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            glassKeyRows.forEachIndexed { rowIndex, row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    row.forEachIndexed { columnIndex, key ->
+                        val isClearKey = rowIndex == 0 && columnIndex == 0
+                        // "C" clears the question; once cleared it turns into "AC" (clears everything)
+                        val label = if (isClearKey && isAllClear) "AC" else key.label
+                        val description = if (isClearKey && isAllClear) "پاک کردن همه" else key.description
+                        GlassKeyButton(
+                            key = key,
+                            label = label,
+                            description = description,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (isClearKey && isAllClear) viewModel.onClearAll() else key.action(viewModel)
+                            }
+                        )
+                    }
                 }
             }
         }
