@@ -360,14 +360,34 @@ fun StepCard(step: SolutionStep, isDark: Boolean) {
 
 @Composable
 fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var num1 by remember { mutableStateOf("3") }
-    var den1 by remember { mutableStateOf("4") }
+    var num1 by remember { mutableStateOf("") }
+    var den1 by remember { mutableStateOf("") }
     var op by remember { mutableStateOf("+") }
-    var num2 by remember { mutableStateOf("2") }
-    var den2 by remember { mutableStateOf("5") }
+    var num2 by remember { mutableStateOf("") }
+    var den2 by remember { mutableStateOf("") }
     var shown by remember { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "کسر",
+                color = if (isDark) TextPrimary else LightTextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
+            PowerBox(isDark)
+            Text(
+                text = "توان",
+                color = if (isDark) TextPrimary else LightTextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -454,9 +474,9 @@ fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun EquationInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var a by remember { mutableStateOf("1") }
-    var b by remember { mutableStateOf("-5") }
-    var c by remember { mutableStateOf("6") }
+    var a by remember { mutableStateOf("") }
+    var b by remember { mutableStateOf("") }
+    var c by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -507,11 +527,11 @@ fun EquationInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun DerivativeInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var a by remember { mutableStateOf("3") }
-    var n by remember { mutableStateOf("2") }
-    var b by remember { mutableStateOf("4") }
-    var c by remember { mutableStateOf("-1") }
-    var atPoint by remember { mutableStateOf("2") }
+    var a by remember { mutableStateOf("") }
+    var n by remember { mutableStateOf("") }
+    var b by remember { mutableStateOf("") }
+    var c by remember { mutableStateOf("") }
+    var atPoint by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -551,11 +571,11 @@ fun DerivativeInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun IntegralInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var a by remember { mutableStateOf("2") }
-    var n by remember { mutableStateOf("1") }
-    var b by remember { mutableStateOf("3") }
-    var lower by remember { mutableStateOf("0") }
-    var upper by remember { mutableStateOf("2") }
+    var a by remember { mutableStateOf("") }
+    var n by remember { mutableStateOf("") }
+    var b by remember { mutableStateOf("") }
+    var lower by remember { mutableStateOf("") }
+    var upper by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -588,7 +608,7 @@ fun IntegralInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun LimitInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var a by remember { mutableStateOf("3") }
+    var a by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -613,8 +633,8 @@ fun LimitInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun SigmaInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var n by remember { mutableStateOf("10") }
-    var power by remember { mutableStateOf("1") }
+    var n by remember { mutableStateOf("") }
+    var power by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -639,10 +659,10 @@ fun SigmaInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
 
 @Composable
 fun MatrixInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
-    var a by remember { mutableStateOf("4") }
-    var b by remember { mutableStateOf("2") }
-    var c by remember { mutableStateOf("3") }
-    var d by remember { mutableStateOf("1") }
+    var a by remember { mutableStateOf("") }
+    var b by remember { mutableStateOf("") }
+    var c by remember { mutableStateOf("") }
+    var d by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -730,6 +750,60 @@ private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: Strin
                 )
             )
             TypesetFraction(n2, d2, color)
+        }
+    }
+}
+
+@Composable
+private fun PowerBox(isDark: Boolean) {
+    var base by remember { mutableStateOf("") }
+    var exp by remember { mutableStateOf("") }
+    val textColor = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B2030)
+    val style = androidx.compose.ui.text.TextStyle(
+        fontFamily = FontFamily.Serif,
+        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        color = textColor
+    )
+    Box(modifier = Modifier.size(width = 104.dp, height = 92.dp)) {
+        // Base box
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(66.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (isDark) Color(0xFF1A1426) else Color.White)
+                .border(2.dp, Color(0xFFDCC8F8), RoundedCornerShape(14.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = base,
+                onValueChange = { base = it },
+                singleLine = true,
+                textStyle = style.copy(fontSize = 28.sp),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
+                modifier = Modifier.width(54.dp)
+            )
+        }
+        // Exponent box (overlapping top-right)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(42.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(if (isDark) Color(0xFF2E1B4D) else Color(0xFFF1E8FD))
+                .border(2.5.dp, Color(0xFF9B5CF6), RoundedCornerShape(13.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = exp,
+                onValueChange = { exp = it },
+                singleLine = true,
+                textStyle = style.copy(fontSize = 20.sp),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
+                modifier = Modifier.width(32.dp)
+            )
         }
     }
 }
