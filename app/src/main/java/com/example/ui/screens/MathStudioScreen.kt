@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -364,6 +365,7 @@ fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
     var op by remember { mutableStateOf("+") }
     var num2 by remember { mutableStateOf("2") }
     var den2 by remember { mutableStateOf("5") }
+    var shown by remember { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
@@ -430,14 +432,22 @@ fun FractionInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
             }
         }
 
-        SolveButton(title = "محاسبه کسر با مراحل") {
-            viewModel.solveStudioFraction(
-                num1 = num1.toLongOrNull() ?: 1L,
-                den1 = den1.toLongOrNull() ?: 1L,
-                op = op,
-                num2 = num2.toLongOrNull() ?: 1L,
-                den2 = den2.toLongOrNull() ?: 1L
-            )
+        SolveButton(title = "نمایش صورت سوال") {
+            viewModel.clearStudioSolution()
+            shown = true
+        }
+
+        if (shown) {
+            TypesetFractionProblem(num1, den1, op, num2, den2, isDark)
+            SolveButton(title = "محاسبه کسر با مراحل") {
+                viewModel.solveStudioFraction(
+                    num1 = num1.toLongOrNull() ?: 1L,
+                    den1 = den1.toLongOrNull() ?: 1L,
+                    op = op,
+                    num2 = num2.toLongOrNull() ?: 1L,
+                    den2 = den2.toLongOrNull() ?: 1L
+                )
+            }
         }
     }
 }
@@ -678,5 +688,48 @@ fun SolveButton(title: String, onClick: () -> Unit) {
         Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun TypesetFraction(n: String, d: String, color: Color) {
+    val style = androidx.compose.ui.text.TextStyle(
+        fontFamily = FontFamily.Serif, fontSize = 34.sp, color = color
+    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 6.dp)) {
+        Text(n, style = style, modifier = Modifier.padding(horizontal = 4.dp))
+        Box(
+            Modifier
+                .padding(vertical = 3.dp)
+                .fillMaxWidth()
+                .height(1.5.dp)
+                .background(color)
+        )
+        Text(d, style = style, modifier = Modifier.padding(horizontal = 4.dp))
+    }
+}
+
+@Composable
+private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: String, d2: String, isDark: Boolean) {
+    val color = if (isDark) Color(0xFFE8E8E8) else Color(0xFF1B1B1B)
+    val sign = when (op) { "*" -> "×"; "-" -> "−"; else -> op }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isDark) AmoledBackground else LightBackground)
+            .padding(vertical = 20.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TypesetFraction(n1, d1, color)
+            Text(
+                " $sign ",
+                style = androidx.compose.ui.text.TextStyle(
+                    fontFamily = FontFamily.Serif, fontSize = 34.sp, color = color
+                )
+            )
+            TypesetFraction(n2, d2, color)
+        }
     }
 }
