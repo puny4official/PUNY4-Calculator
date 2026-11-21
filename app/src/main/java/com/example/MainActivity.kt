@@ -1,6 +1,9 @@
 package com.example
 
 import android.Manifest
+import android.content.Context
+import android.content.res.Configuration
+import java.util.Locale
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -33,6 +36,22 @@ import com.example.ui.theme.Puny4Theme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: CalculatorViewModel by viewModels()
+
+    /**
+     * The app does not follow the phone's language or font-size setting: it always uses
+     * English (left-to-right) and the normal text size, so it looks the same on every phone.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        val base = try {
+            val config = Configuration(newBase.resources.configuration)
+            config.fontScale = 1.0f
+            config.setLocale(Locale.ENGLISH)
+            newBase.createConfigurationContext(config)
+        } catch (_: Throwable) {
+            newBase
+        }
+        super.attachBaseContext(base)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
