@@ -56,6 +56,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        try {
+            window.decorView.layoutDirection = android.view.View.LAYOUT_DIRECTION_LTR
+        } catch (_: Throwable) {
+        }
 
         // Background check for new versions + permission to show its notification.
         // This must never be able to stop the app from opening (some phones refuse it).

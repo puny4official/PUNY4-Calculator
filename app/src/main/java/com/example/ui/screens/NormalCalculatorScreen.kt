@@ -514,9 +514,9 @@ private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllCl
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             glassKeyRows.forEachIndexed { rowIndex, row ->
-                Row(
+                com.example.ui.components.FixedLtrEqualRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    spacing = 8.dp
                 ) {
                     row.forEachIndexed { columnIndex, key ->
                         val isClearKey = rowIndex == 0 && columnIndex == 0
@@ -528,7 +528,7 @@ private fun GlassKeypad(viewModel: CalculatorViewModel, isDark: Boolean, isAllCl
                             label = label,
                             description = description,
                             isDark = isDark,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier,
                             onClick = {
                                 if (isClearKey && isAllClear) viewModel.onClearAll() else key.action(viewModel)
                             }

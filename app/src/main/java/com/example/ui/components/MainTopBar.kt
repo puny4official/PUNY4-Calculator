@@ -204,49 +204,51 @@ private fun GlassTopBar(
 
     // The top bar keeps the same order on every phone, also when the phone language is Persian
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Row(
+        FixedLtrBar(
             modifier = modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            GlassIconButton(
-                Icons.Default.History, "top_bar_history_button", "تاریخچه", isDark,
-                onClick = { viewModel.setHistoryOpen(true) }
-            )
-            Spacer(Modifier.width(10.dp))
-            GlassIconButton(
-                Icons.Default.Info, "top_bar_scope_button", "دامنه و راهنما", isDark,
-                onClick = { viewModel.setScopeOpen(true) }
-            )
-            Spacer(Modifier.width(10.dp))
-            GlassIconButton(
-                Icons.Default.Palette, "top_bar_theme_button", "ظاهر", isDark,
-                onClick = { themeMenuOpen = true }
-            ) {
-                ThemeDropdown(
-                    expanded = themeMenuOpen,
-                    onDismiss = { themeMenuOpen = false },
-                    viewModel = viewModel,
-                    themeMode = themeMode,
-                    isDark = isDark
+            left = {
+                FixedLtrRow(spacing = 10.dp) {
+                    GlassIconButton(
+                        Icons.Default.History, "top_bar_history_button", "تاریخچه", isDark,
+                        onClick = { viewModel.setHistoryOpen(true) }
+                    )
+                    GlassIconButton(
+                        Icons.Default.Info, "top_bar_scope_button", "دامنه و راهنما", isDark,
+                        onClick = { viewModel.setScopeOpen(true) }
+                    )
+                    GlassIconButton(
+                        Icons.Default.Palette, "top_bar_theme_button", "ظاهر", isDark,
+                        onClick = { themeMenuOpen = true }
+                    ) {
+                        ThemeDropdown(
+                            expanded = themeMenuOpen,
+                            onDismiss = { themeMenuOpen = false },
+                            viewModel = viewModel,
+                            themeMode = themeMode,
+                            isDark = isDark
+                        )
+                    }
+                }
+            },
+            center = {
+                Text(
+                    text = "PUNY4 Calculator",
+                    color = if (isDark) Color.White else LightTextPrimary,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+            },
+            right = {
+                GlassIconButton(
+                    Icons.Default.Menu, "top_bar_hamburger_button", "منو", isDark,
+                    onClick = { viewModel.setDrawerOpen(true) }
                 )
             }
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = "PUNY4 Calculator",
-                color = if (isDark) Color.White else LightTextPrimary,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
-            )
-            Spacer(Modifier.width(12.dp))
-            GlassIconButton(
-                Icons.Default.Menu, "top_bar_hamburger_button", "منو", isDark,
-                onClick = { viewModel.setDrawerOpen(true) }
-            )
-        }
+        )
     }
 }
 
@@ -283,7 +285,7 @@ fun HamburgerSideSheet(
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(0.58f) // Half screen from top to bottom!
-                    .align(Alignment.CenterEnd)
+                    .align(androidx.compose.ui.AbsoluteAlignment.CenterRight)
                     .background(if (isDark) AmoledDisplaySurface else LightDisplaySurface)
                     .border(
                         1.dp,
