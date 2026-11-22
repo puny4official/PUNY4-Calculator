@@ -843,13 +843,13 @@ fun PowerOperationsSection(viewModel: CalculatorViewModel, isDark: Boolean) {
                         .size(32.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (op == sign) Color(0xFFE2D0FA)
+                            if (op == sign) Color(0xFF7C3AED)
                             else if (isDark) Color(0xFF2A2140) else Color(0xFFEDE3FB)
                         )
                         .clickable { op = sign; shown = false },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(sign, color = Color(0xFF7C3AED), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(sign, color = if (op == sign) Color.White else Color(0xFF7C3AED), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1042,13 +1042,13 @@ private fun SignChips(sign: String, onSign: (String) -> Unit, isDark: Boolean) {
                     .size(26.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        if (sign == sg) Color(0xFFD9C2F8)
+                        if (sign == sg) Color(0xFF7C3AED)
                         else if (isDark) Color(0xFF2A2140) else Color(0xFFEDE3FB)
                     )
                     .clickable { onSign(sg) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(sg, color = Color(0xFF7C3AED), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(sg, color = if (sign == sg) Color.White else Color(0xFF7C3AED), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
