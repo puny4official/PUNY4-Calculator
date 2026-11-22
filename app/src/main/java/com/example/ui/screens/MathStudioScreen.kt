@@ -991,7 +991,7 @@ private fun BigBrace(color: Color, modifier: Modifier = Modifier) {
         val w = size.width
         val h = size.height
         val mid = h / 2f
-        val stroke = 3.5.dp.toPx()
+        val stroke = 4.dp.toPx()
         val path = androidx.compose.ui.graphics.Path().apply {
             moveTo(w, stroke)
             cubicTo(w * 0.25f, stroke, w * 0.55f, mid * 0.55f, w * 0.45f, mid * 0.8f)
@@ -1015,7 +1015,7 @@ private fun SystemField(value: String, onChange: (String) -> Unit, isDark: Boole
             .height(46.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(if (isDark) Color(0xFF1A1426) else Color.White)
-            .border(2.dp, Color(0xFFDCC8F8), RoundedCornerShape(14.dp)),
+            .border(2.dp, Color(0xFFD9B8F7), RoundedCornerShape(14.dp)),
         contentAlignment = Alignment.Center
     ) {
         androidx.compose.foundation.text.BasicTextField(
@@ -1060,7 +1060,7 @@ fun LinearSystemSection(isDark: Boolean) {
     var a1 by remember { mutableStateOf("") }; var b1 by remember { mutableStateOf("") }; var c1 by remember { mutableStateOf("") }
     var a2 by remember { mutableStateOf("") }; var b2 by remember { mutableStateOf("") }; var c2 by remember { mutableStateOf("") }
     var s1 by remember { mutableStateOf("+") }; var s2 by remember { mutableStateOf("+") }
-    val purple = Color(0xFF9B5CF6)
+    val ink = if (isDark) Color(0xFFF2F2F2) else Color(0xFF0B0B0B)
     val letter = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B1B3A)
     val letterStyle = androidx.compose.ui.text.TextStyle(
         fontFamily = FontFamily.Serif, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -1080,7 +1080,7 @@ fun LinearSystemSection(isDark: Boolean) {
             SignChips(sign, onSign, isDark)
             SystemField(b, onB, isDark, Modifier.weight(1f))
             Text("y", style = letterStyle)
-            Text("=", color = purple, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text("=", color = ink, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             SystemField(c, onC, isDark, Modifier.weight(1f))
         }
     }
@@ -1089,7 +1089,7 @@ fun LinearSystemSection(isDark: Boolean) {
         modifier = Modifier.fillMaxWidth().testTag("linear_system_box"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BigBrace(purple, Modifier.width(20.dp).height(108.dp))
+        BigBrace(ink, Modifier.width(20.dp).height(108.dp))
         Spacer(Modifier.width(6.dp))
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.weight(1f)) {
             EquationRow(a1, { a1 = it }, b1, { b1 = it }, c1, { c1 = it }, s1, { s1 = it })
