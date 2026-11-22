@@ -343,6 +343,25 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun solveStudioLinearSystem(
+        a1: String, s1: String, b1: String, c1: String,
+        a2: String, s2: String, b2: String, c2: String
+    ) {
+        try {
+            _studioError.value = null
+            val p = com.example.math.solver.LinearSystemParse.parse(a1, s1, b1, c1, a2, s2, b2, c2)
+            if (p == null) {
+                _studioError.value = "ضریب‌ها باید عدد باشند (مثل 2 یا 3.5 یا 3/4)."
+                return
+            }
+            val solution = com.example.math.solver.LinearSystemSolver.solve(p[0], p[1], p[2], p[3], p[4], p[5])
+            _studioSolution.value = solution
+            saveStudioSolution(solution)
+        } catch (ex: Exception) {
+            _studioError.value = ex.message ?: "خطا در حل دستگاه"
+        }
+    }
+
     fun solveStudioFraction(num1: Long, den1: Long, op: String, num2: Long, den2: Long) {
         try {
             _studioError.value = null
