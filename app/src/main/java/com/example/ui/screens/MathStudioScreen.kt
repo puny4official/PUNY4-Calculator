@@ -1099,6 +1099,14 @@ fun LinearSystemSection(viewModel: CalculatorViewModel, isDark: Boolean) {
         }
     }
 
+    Text(
+        text = "اگر داخل کادر چیزی نوشته نشود، فقط x یا y حساب می‌شود (یعنی ضریب آن ۱ است).",
+        color = if (isDark) TextSecondary else LightTextSecondary,
+        fontSize = 13.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().testTag("linear_system_hint")
+    )
+
     SolveButton(title = "نمایش صورت سوال") {
         viewModel.clearStudioSolution()
         shown = true
