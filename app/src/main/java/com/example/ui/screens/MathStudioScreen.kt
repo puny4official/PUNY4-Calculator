@@ -53,7 +53,8 @@ fun MathStudioScreen(
     var showPowerOps by remember { mutableStateOf(false) }
     val categories = listOf(
         "کسر",
-        "توان"
+        "توان",
+        "دستگاه معادلات خطی"
     )
 
     LazyColumn(
@@ -155,6 +156,7 @@ fun MathStudioScreen(
                     // Render Inputs Based on Category
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
+                        "دستگاه معادلات خطی" -> LinearSystemSection(isDark)
                         "توان" -> if (showPowerOps) PowerOperationsSection(viewModel, isDark) else PowerInputSection(viewModel, isDark)
                     }
                 }
@@ -980,4 +982,118 @@ private fun fractionProblemInWords(n1: String, d1: String, op: String, n2: Strin
     val b = faFraction(n2, d2) ?: return null
     val o = when (op) { "+" -> "به علاوهٔ"; "-" -> "منهای"; "*" -> "ضرب در"; else -> "تقسیم بر" }
     return "$a $o $b"
+}
+
+/** Curly brace "{" drawn in code, as tall as the two equation rows. */
+@Composable
+private fun BigBrace(color: Color, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val mid = h / 2f
+        val stroke = 3.5.dp.toPx()
+        val path = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w, stroke)
+            cubicTo(w * 0.25f, stroke, w * 0.55f, mid * 0.55f, w * 0.45f, mid * 0.8f)
+            cubicTo(w * 0.40f, mid * 0.95f, w * 0.35f, mid * 0.97f, 0f, mid)
+            cubicTo(w * 0.35f, mid * 1.03f, w * 0.40f, mid * 1.05f, w * 0.45f, mid * 1.2f)
+            cubicTo(w * 0.55f, mid * 1.45f, w * 0.25f, h - stroke, w, h - stroke)
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        )
+    }
+}
+
+@Composable
+private fun SystemField(value: String, onChange: (String) -> Unit, isDark: Boolean, modifier: Modifier = Modifier) {
+    val textColor = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B2030)
+    Box(
+        modifier = modifier
+            .height(46.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isDark) Color(0xFF1A1426) else Color.White)
+            .border(2.dp, Color(0xFFDCC8F8), RoundedCornerShape(14.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.foundation.text.BasicTextField(
+            value = value,
+            onValueChange = onChange,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            textStyle = androidx.compose.ui.text.TextStyle(
+                fontFamily = FontFamily.Serif, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center, color = textColor
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(textColor),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun SignChips(sign: String, onSign: (String) -> Unit, isDark: Boolean) {
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        listOf("+", "−").forEach { sg ->
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (sign == sg) Color(0xFFD9C2F8)
+                        else if (isDark) Color(0xFF2A2140) else Color(0xFFEDE3FB)
+                    )
+                    .clickable { onSign(sg) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(sg, color = Color(0xFF7C3AED), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+/** Linear system of two equations:  { a₁x ± b₁y = c₁ ; a₂x ± b₂y = c₂ } — inputs only, all empty. */
+@Composable
+fun LinearSystemSection(isDark: Boolean) {
+    var a1 by remember { mutableStateOf("") }; var b1 by remember { mutableStateOf("") }; var c1 by remember { mutableStateOf("") }
+    var a2 by remember { mutableStateOf("") }; var b2 by remember { mutableStateOf("") }; var c2 by remember { mutableStateOf("") }
+    var s1 by remember { mutableStateOf("+") }; var s2 by remember { mutableStateOf("+") }
+    val purple = Color(0xFF9B5CF6)
+    val letter = if (isDark) Color(0xFFF2F2F2) else Color(0xFF1B1B3A)
+    val letterStyle = androidx.compose.ui.text.TextStyle(
+        fontFamily = FontFamily.Serif, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        fontWeight = FontWeight.Bold, fontSize = 22.sp, color = letter
+    )
+
+    @Composable
+    fun EquationRow(a: String, onA: (String) -> Unit, b: String, onB: (String) -> Unit,
+                    c: String, onC: (String) -> Unit, sign: String, onSign: (String) -> Unit) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            SystemField(a, onA, isDark, Modifier.weight(1f))
+            Text("x", style = letterStyle)
+            SignChips(sign, onSign, isDark)
+            SystemField(b, onB, isDark, Modifier.weight(1f))
+            Text("y", style = letterStyle)
+            Text("=", color = purple, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            SystemField(c, onC, isDark, Modifier.weight(1f))
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag("linear_system_box"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BigBrace(purple, Modifier.width(20.dp).height(108.dp))
+        Spacer(Modifier.width(6.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.weight(1f)) {
+            EquationRow(a1, { a1 = it }, b1, { b1 = it }, c1, { c1 = it }, s1, { s1 = it })
+            EquationRow(a2, { a2 = it }, b2, { b2 = it }, c2, { c2 = it }, s2, { s2 = it })
+        }
+    }
 }
