@@ -711,7 +711,10 @@ private fun TypesetFraction(n: String, d: String, color: Color) {
     val style = androidx.compose.ui.text.TextStyle(
         fontFamily = FontFamily.Serif, fontSize = 34.sp, color = color
     )
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 6.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(IntrinsicSize.Max).padding(horizontal = 6.dp)
+    ) {
         Text(n, style = style, modifier = Modifier.padding(horizontal = 4.dp))
         Box(
             Modifier
@@ -728,13 +731,14 @@ private fun TypesetFraction(n: String, d: String, color: Color) {
 private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: String, d2: String, isDark: Boolean) {
     val color = if (isDark) Color(0xFFE8E8E8) else Color(0xFF1B1B1B)
     val sign = when (op) { "*" -> "×"; "-" -> "−"; else -> op }
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(if (isDark) AmoledBackground else LightBackground)
-            .padding(vertical = 20.dp),
-        contentAlignment = Alignment.Center
+            .padding(vertical = 20.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TypesetFraction(n1, d1, color)
@@ -745,6 +749,16 @@ private fun TypesetFractionProblem(n1: String, d1: String, op: String, n2: Strin
                 )
             )
             TypesetFraction(n2, d2, color)
+        }
+        val words = fractionProblemInWords(n1, d1, op, n2, d2)
+        if (words != null) {
+            Text(
+                text = words,
+                color = color,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -909,4 +923,61 @@ fun PowerInputSection(viewModel: CalculatorViewModel, isDark: Boolean) {
             }
         }
     }
+}
+
+// --- Persian number words (for reading a fraction aloud, e.g. "سه چهارم به علاوهٔ دو پنجم") ---
+
+private val faOnes = listOf("صفر", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه",
+    "ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده", "هفده", "هجده", "نوزده")
+private val faTens = listOf("", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود")
+private val faHundreds = listOf("", "صد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد")
+
+private fun faBelowThousand(n: Int): String {
+    val parts = mutableListOf<String>()
+    if (n >= 100) parts.add(faHundreds[n / 100])
+    val r = n % 100
+    if (r > 0) {
+        if (r < 20) parts.add(faOnes[r])
+        else {
+            parts.add(faTens[r / 10])
+            if (r % 10 > 0) parts.add(faOnes[r % 10])
+        }
+    }
+    return parts.joinToString(" و ")
+}
+
+private fun faCardinal(n: Long): String? {
+    if (n < 0 || n > 999_999) return null
+    if (n == 0L) return "صفر"
+    val thousands = (n / 1000).toInt()
+    val rest = (n % 1000).toInt()
+    val parts = mutableListOf<String>()
+    if (thousands > 0) parts.add(if (thousands == 1) "هزار" else faBelowThousand(thousands) + " هزار")
+    if (rest > 0) parts.add(faBelowThousand(rest))
+    return parts.joinToString(" و ")
+}
+
+private fun faOrdinal(n: Long): String? {
+    val c = faCardinal(n) ?: return null
+    return when {
+        c.endsWith("سه") -> c.dropLast(2) + "سوم"
+        c.endsWith("سی") -> "$c\u200Cام"
+        else -> c + "م"
+    }
+}
+
+private fun faFraction(n: String, d: String): String? {
+    val nn = n.trim().toLongOrNull() ?: return null
+    val dd = d.trim().toLongOrNull() ?: return null
+    val neg = (nn < 0) != (dd < 0) && nn != 0L
+    val num = faCardinal(kotlin.math.abs(nn)) ?: return null
+    val den = faOrdinal(kotlin.math.abs(dd)) ?: return null
+    return (if (neg) "منفی " else "") + "$num $den"
+}
+
+private fun fractionProblemInWords(n1: String, d1: String, op: String, n2: String, d2: String): String? {
+    val a = faFraction(n1, d1) ?: return null
+    val b = faFraction(n2, d2) ?: return null
+    val o = when (op) { "+" -> "به علاوهٔ"; "-" -> "منهای"; "*" -> "ضرب در"; else -> "تقسیم بر" }
+    return "$a $o $b"
 }

@@ -99,7 +99,9 @@ fun RenderMathNode(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier
+                    .width(IntrinsicSize.Max)
+                    .padding(horizontal = 4.dp)
             ) {
                 // Numerator
                 Box(
