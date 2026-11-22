@@ -156,7 +156,7 @@ fun MathStudioScreen(
                     // Render Inputs Based on Category
                     when (activeCategory) {
                         "کسر" -> FractionInputSection(viewModel, isDark)
-                        "دستگاه معادلات خطی" -> LinearSystemSection(isDark)
+                        "دستگاه معادلات خطی" -> LinearSystemSection(viewModel, isDark)
                         "توان" -> if (showPowerOps) PowerOperationsSection(viewModel, isDark) else PowerInputSection(viewModel, isDark)
                     }
                 }
@@ -1056,7 +1056,8 @@ private fun SignChips(sign: String, onSign: (String) -> Unit, isDark: Boolean) {
 
 /** Linear system of two equations:  { a₁x ± b₁y = c₁ ; a₂x ± b₂y = c₂ } — inputs only, all empty. */
 @Composable
-fun LinearSystemSection(isDark: Boolean) {
+fun LinearSystemSection(viewModel: CalculatorViewModel, isDark: Boolean) {
+    var shown by remember { mutableStateOf(false) }
     var a1 by remember { mutableStateOf("") }; var b1 by remember { mutableStateOf("") }; var c1 by remember { mutableStateOf("") }
     var a2 by remember { mutableStateOf("") }; var b2 by remember { mutableStateOf("") }; var c2 by remember { mutableStateOf("") }
     var s1 by remember { mutableStateOf("+") }; var s2 by remember { mutableStateOf("+") }
@@ -1085,6 +1086,7 @@ fun LinearSystemSection(isDark: Boolean) {
         }
     }
 
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Row(
         modifier = Modifier.fillMaxWidth().testTag("linear_system_box"),
         verticalAlignment = Alignment.CenterVertically
@@ -1092,8 +1094,56 @@ fun LinearSystemSection(isDark: Boolean) {
         BigBrace(ink, Modifier.width(20.dp).height(108.dp))
         Spacer(Modifier.width(6.dp))
         Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.weight(1f)) {
-            EquationRow(a1, { a1 = it }, b1, { b1 = it }, c1, { c1 = it }, s1, { s1 = it })
-            EquationRow(a2, { a2 = it }, b2, { b2 = it }, c2, { c2 = it }, s2, { s2 = it })
+            EquationRow(a1, { a1 = it; shown = false }, b1, { b1 = it; shown = false }, c1, { c1 = it; shown = false }, s1, { s1 = it; shown = false })
+            EquationRow(a2, { a2 = it; shown = false }, b2, { b2 = it; shown = false }, c2, { c2 = it; shown = false }, s2, { s2 = it; shown = false })
         }
+    }
+
+    SolveButton(title = "نمایش صورت سوال") {
+        viewModel.clearStudioSolution()
+        shown = true
+    }
+    if (shown) {
+        val parsed = com.example.math.solver.LinearSystemParse.parse(a1, s1, b1, c1, a2, s2, b2, c2)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(if (isDark) AmoledBackground else LightBackground)
+                .padding(vertical = 20.dp, horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (parsed == null) {
+                Text("ضریب‌ها باید عدد باشند (مثل 2 یا 3.5 یا 3/4).", color = Color(0xFFE11D48), fontSize = 14.sp)
+            } else {
+                val lines = listOf(
+                    com.example.math.solver.LinearSystemSolver.equationText(parsed[0], parsed[1], parsed[2], true),
+                    com.example.math.solver.LinearSystemSolver.equationText(parsed[3], parsed[4], parsed[5], true)
+                )
+                BigBrace(ink, Modifier.width(18.dp).height(72.dp))
+                Spacer(Modifier.width(8.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    lines.forEach { line ->
+                        Text(
+                            text = androidx.compose.ui.text.buildAnnotatedString {
+                                line.forEach { ch ->
+                                    if (ch == 'x' || ch == 'y')
+                                        withStyle(androidx.compose.ui.text.SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) { append(ch) }
+                                    else append(ch)
+                                }
+                            },
+                            style = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Serif, fontSize = 30.sp, color = ink)
+                        )
+                    }
+                }
+            }
+        }
+        if (parsed != null) {
+            SolveButton(title = "محاسبه دستگاه با مراحل") {
+                viewModel.solveStudioLinearSystem(a1, s1, b1, c1, a2, s2, b2, c2)
+            }
+        }
+    }
     }
 }
